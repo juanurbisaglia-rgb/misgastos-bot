@@ -18,30 +18,36 @@ GOOGLE_CREDENTIALS_JSON = os.environ["GOOGLE_CREDENTIALS_JSON"]
 
 def get_sheet():
     creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
-    creds = Credentials.from_service_account_info(
-        creds_dict,
-        scopes=["https://www.googleapis.com/auth/spreadsheets"]
-    )
+    creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
     spreadsheet = gc.open_by_key(SPREADSHEET_ID)
     sheet_names = [s.title for s in spreadsheet.worksheets()]
     if "Gastos" not in sheet_names:
-        gastos = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=6)
-        gastos.append_row(["Fecha", "Descripcion", "Monto", "Moneda", "Categoria", "Notas"])
+        g = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=6)
+        g.append_row(["Fecha","Descripcion","Monto","Moneda","Categoria","Notas"])
     if "Vencimientos" not in sheet_names:
-        venc = spreadsheet.add_worksheet(title="Vencimientos", rows=100, cols=5)
-        venc.append_row(["Fecha Vencimiento", "Descripcion", "Monto", "Moneda", "Estado"])
+        v = spreadsheet.add_worksheet(title="Vencimientos", rows=100, cols=5)
+        v.append_row(["Fecha Vencimiento","Descripcion","Monto","Moneda","Estado"])
     return spreadsheet
 
 def get_recent_data(spreadsheet):
     try:
         gastos = spreadsheet.worksheet("Gastos").get_all_values()
-        vencimientos = spreadsheet.worksheet("Vencimientos").get_all_values()
-        recent_gastos = gastos[-20:] if len(gastos) > 1 else [gastos[0]] if gastos else []
-        return {"gastos_recientes": recent_gastos, "vencimientos": vencimientos}
+        venc = spreadsheet.worksheet("Vencimientos").get_all_values()
+        return {"gastos_recientes": gastos[-50:] if len(gastos)>1 else [], "vencimientos": venc}
     except Exception as e:
-        logger.error(f"Error leyendo sheets: {e}")
-        return {"gastos_recientes": [], "vencimientos": []}
+        logger.error(f"Sheets error: {e}")
+        return {"gastos_recientes":[], "vencimientos":[]}
+
+def get_mes_actual(spreadsheet):
+    try:
+        gastos = spreadsheet.worksheet("Gastos").get_all_values()
+        if len(gastos) <= 1:
+            return []
+        mes_actual = datetime.now().strftime("%m/%Y")
+        return [g for g in gastos[1:] if len(g) > 0 and g[0].endswith(mes_actual)]
+    except:
+        return []
 
 async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
@@ -49,29 +55,38 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         spreadsheet = get_sheet()
         data = get_recent_data(spreadsheet)
+        gastos_mes = get_mes_actual(spreadsheet)
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
         system_prompt = f"""Sos un asistente financiero personal amigable que habla en espanol argentino (tuteo con vos).
-Tu trabajo es ayudar al usuario a registrar gastos, ingresos y vencimientos.
+Fecha: {datetime.now().strftime("%d/%m/%Y %H:%M")}
 
-Fecha y hora actual: {datetime.now().strftime("%d/%m/%Y %H:%M")}
+DATOS ACTUALES:
+Gastos del mes actual: {json.dumps(gastos_mes, ensure_ascii=False)}
+Ultimos gastos (hasta 50): {json.dumps(data['gastos_recientes'], ensure_ascii=False)}
+Vencimientos: {json.dumps(data['vencimientos'], ensure_ascii=False)}
 
-Datos actuales en la planilla:
-- Ultimos gastos: {json.dumps(data['gastos_recientes'], ensure_ascii=False)}
-- Vencimientos: {json.dumps(data['vencimientos'], ensure_ascii=False)}
+GASTOS FIJOS MENSUALES CONOCIDOS:
+- Monotributo: $81.542 (dia 18)
+- Starlink: $63.000 (dia 20)
+- Microsoft: $4.885 (dia 12)
+- Claude: USD 20 (dia 15)
+- iCloud: USD 3.8 (dia 29)
+- Sueldo: $2.138.000 (principios de mes)
 
-Cuando el usuario te diga algo, analiza si es:
-1. Un GASTO o INGRESO
-2. Un VENCIMIENTO
-3. Una CONSULTA
+Cuando el usuario pida un RESUMEN o consulta sobre sus finanzas, analiza los datos y responde con un resumen claro que incluya:
+- Total gastado en el mes
+- Desglose por categoria
+- Gastos para Agritest si hay
+- Proximos vencimientos importantes
+- Saldo estimado del mes
 
-Responde SOLO con JSON valido, sin backticks ni markdown, con esta estructura exacta:
-{{"mensaje": "tu respuesta amigable", "accion": "gasto", "datos": {{"fecha": "19/04/2025", "descripcion": "super", "monto": 500, "moneda": "ARS", "categoria": "Comida", "notas": ""}}}}
+Para registrar gastos o vencimientos, responde SOLO con JSON valido sin backticks:
+{{"mensaje":"respuesta amigable","accion":"gasto|vencimiento|consulta|ninguna","datos":{{"fecha":"DD/MM/YYYY","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida|Transporte|Servicios|Entretenimiento|Salud|Ropa|Ingreso|Agritest|Otros","notas":"","fecha_vencimiento":"DD/MM/YYYY","estado":"Pendiente"}}}}
 
-Los valores posibles de accion son: gasto, vencimiento, consulta, ninguna
-Los valores posibles de categoria son: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Ingreso, Otros
-Para vencimientos usa fecha_vencimiento en lugar de fecha, y agrega estado: Pendiente"""
+Para consultas y resumenes, responde directamente en texto natural sin JSON.
+Usa emojis para que sea mas facil de leer."""
 
         response = client.messages.create(
             model="claude-haiku-4-5-20251001",
@@ -80,51 +95,50 @@ Para vencimientos usa fecha_vencimiento en lugar de fecha, y agrega estado: Pend
             messages=[{"role": "user", "content": user_message}]
         )
 
-        response_text = response.content[0].text.strip()
-        logger.info(f"Claude response: {response_text}")
+        text = response.content[0].text.strip()
+        logger.info(f"Claude response: {text[:200]}")
 
-        if "```" in response_text:
-            parts = response_text.split("```")
-            response_text = parts[1] if len(parts) > 1 else parts[0]
-            if response_text.startswith("json"):
-                response_text = response_text[4:]
+        # Intentar parsear como JSON, si falla es texto directo
+        try:
+            if text.startswith('{'):
+                if "```" in text:
+                    text = text.split("```")[1]
+                    if text.startswith("json"): text = text[4:]
+                parsed = json.loads(text.strip())
+                accion = parsed.get("accion","ninguna")
+                datos = parsed.get("datos",{})
+                mensaje = parsed.get("mensaje","Entendido!")
 
-        parsed = json.loads(response_text.strip())
-        mensaje = parsed.get("mensaje", "Entendido!")
-        accion = parsed.get("accion", "ninguna")
-        datos = parsed.get("datos", {})
+                if accion == "gasto" and datos:
+                    spreadsheet.worksheet("Gastos").append_row([
+                        datos.get("fecha", datetime.now().strftime("%d/%m/%Y")),
+                        datos.get("descripcion",""),
+                        datos.get("monto",0),
+                        datos.get("moneda","ARS"),
+                        datos.get("categoria","Otros"),
+                        datos.get("notas","")
+                    ])
+                    logger.info("Gasto guardado!")
+                elif accion == "vencimiento" and datos:
+                    spreadsheet.worksheet("Vencimientos").append_row([
+                        datos.get("fecha_vencimiento",""),
+                        datos.get("descripcion",""),
+                        datos.get("monto",0),
+                        datos.get("moneda","ARS"),
+                        datos.get("estado","Pendiente")
+                    ])
+                    logger.info("Vencimiento guardado!")
 
-        logger.info(f"Accion: {accion}, Datos: {datos}")
+                await update.message.reply_text(mensaje)
+            else:
+                # Respuesta de texto directo (resumen, consulta)
+                await update.message.reply_text(text)
 
-        if accion == "gasto" and datos:
-            sheet = spreadsheet.worksheet("Gastos")
-            sheet.append_row([
-                datos.get("fecha", datetime.now().strftime("%d/%m/%Y")),
-                datos.get("descripcion", ""),
-                datos.get("monto", 0),
-                datos.get("moneda", "ARS"),
-                datos.get("categoria", "Otros"),
-                datos.get("notas", "")
-            ])
-            logger.info("Gasto guardado en Sheets!")
-        elif accion == "vencimiento" and datos:
-            sheet = spreadsheet.worksheet("Vencimientos")
-            sheet.append_row([
-                datos.get("fecha_vencimiento", ""),
-                datos.get("descripcion", ""),
-                datos.get("monto", 0),
-                datos.get("moneda", "ARS"),
-                datos.get("estado", "Pendiente")
-            ])
-            logger.info("Vencimiento guardado en Sheets!")
+        except json.JSONDecodeError:
+            await update.message.reply_text(text)
 
-        await update.message.reply_text(mensaje)
-
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON error: {e}")
-        await update.message.reply_text("Anotado! Intentá de nuevo si algo no quedó bien.")
     except Exception as e:
-        logger.error(f"Error general: {e}")
+        logger.error(f"Error: {e}")
         await update.message.reply_text("Ups, algo salio mal. Intenta de nuevo.")
 
 def main():
