@@ -40,7 +40,7 @@ def datos():
         categorias = {}
         agritest_total = 0
         for g in gastos_mes:
-            cat = g.get("Categoria","Otros")
+            cat = g.get("Categoría", g.get("Categoria", "Otros"))
             try:
                 monto = float(str(g.get("Monto",0)).replace(",","."))
             except:
