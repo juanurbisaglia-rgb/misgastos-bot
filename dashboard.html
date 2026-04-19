@@ -398,3 +398,48 @@ renderAhorros();
 </script>
 </body>
 </html>
+<script>
+// Carga datos reales desde la API
+async function cargarDatosReales() {
+  try {
+    const res = await fetch('/api/datos');
+    const d = await res.json();
+    if (!d.ok) return;
+
+    // Actualizar métricas del mes
+    const moneda = monedaMes;
+    
+    // Total gastos variables reales
+    const totalVar = d.total_gastos_mes;
+    document.getElementById('m-fijos').textContent = '-' + fmt(fijosBase, moneda);
+    
+    // Agritest
+    document.getElementById('m-agritest').textContent = fmt(d.agritest_total, moneda);
+
+    // Saldo real
+    const saldoReal = sueldo + d.agritest_total - fijosBase - totalVar;
+    document.getElementById('m-saldo').textContent = fmt(saldoReal, moneda);
+
+    // Gastos Agritest
+    const agritestContainer = document.querySelector('#tab-mes .card:nth-child(1) .card');
+    if (d.gastos_agritest && d.gastos_agritest.length > 0) {
+      let html = '';
+      d.gastos_agritest.forEach(g => {
+        html += `<div class="row"><div><p class="row-label">${g.Descripcion}</p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-red">-$${parseFloat(g.Monto).toLocaleString('es-AR')}</p></div>`;
+      });
+      html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;" class="c-blue">$${d.agritest_total.toLocaleString('es-AR')}</p></div>`;
+    }
+
+    // Timestamp
+    const sub = document.querySelector('.header-sub');
+    if (sub) sub.textContent = 'Actualizado: ' + d.ultimo_update;
+
+  } catch(e) {
+    console.log('Error cargando datos:', e);
+  }
+}
+
+// Cargar al abrir y cada 30 segundos
+cargarDatosReales();
+setInterval(cargarDatosReales, 30000);
+</script>
