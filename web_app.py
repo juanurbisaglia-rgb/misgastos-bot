@@ -69,7 +69,7 @@ def datos():
             "categorias": {k: round(v, 2) for k, v in categorias.items()},
             "gastos_mes": gastos_mes,
             "vencimientos": vencimientos,
-            "ultimo_update": datetime.now().strftime("%d/%m/%Y %H:%M")
+            "ultimo_update": (datetime.utcnow().replace(hour=(datetime.utcnow().hour - 3) % 24)).strftime("%d/%m/%Y %H:%M")
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
