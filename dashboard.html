@@ -7,29 +7,27 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #222222;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --text: #f0f0f0;
-    --text2: #888;
-    --text3: #555;
-    --green: #3ecf8e;
-    --green-dim: rgba(62,207,142,0.12);
-    --red: #f87171;
-    --red-dim: rgba(248,113,113,0.10);
-    --blue: #60a5fa;
-    --blue-dim: rgba(96,165,250,0.10);
-    --amber: #fbbf24;
-    --amber-dim: rgba(251,191,36,0.10);
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #e8eef4;
+    --border: rgba(0,0,0,0.07);
+    --border2: rgba(0,0,0,0.12);
+    --text: #1a2332;
+    --text2: #5a6a7a;
+    --text3: #8a9aaa;
+    --green: #1a7a4a;
+    --green-dim: rgba(26,122,74,0.10);
+    --red: #c0392b;
+    --red-dim: rgba(192,57,43,0.08);
+    --blue: #1a5fa5;
+    --blue-dim: rgba(26,95,165,0.08);
+    --amber: #8a5f00;
+    --amber-dim: rgba(138,95,0,0.08);
     --radius: 12px;
     --radius-sm: 8px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-  
-  /* HEADER */
   .header { padding: 24px 28px 0; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
   .header-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
   .header-sub { font-size: 13px; color: var(--text2); margin-top: 3px; font-family: 'DM Mono', monospace; }
@@ -38,92 +36,67 @@
   .usd-label { font-size: 11px; color: var(--text2); }
   .usd-value { font-size: 14px; font-weight: 500; font-family: 'DM Mono', monospace; color: var(--text); }
   .usd-date { font-size: 10px; color: var(--text3); }
-
-  /* TABS */
-  .tabs { display: flex; gap: 4px; padding: 20px 28px 0; border-bottom: 0.5px solid var(--border); }
+  .tabs { display: flex; gap: 4px; padding: 20px 28px 0; border-bottom: 0.5px solid var(--border2); }
   .tab { padding: 8px 18px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: transparent; transition: all 0.15s; }
   .tab.active { background: var(--surface); color: var(--text); border: 0.5px solid var(--border2); border-bottom: 0.5px solid var(--surface); margin-bottom: -0.5px; }
   .tab:hover:not(.active) { color: var(--text); }
-
-  /* CONTENT */
   .content { padding: 24px 28px; display: none; }
   .content.active { display: block; }
-
-  /* CURRENCY TOGGLE */
   .toolbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
   .toggle-group { display: flex; background: var(--surface); border: 0.5px solid var(--border2); border-radius: 40px; padding: 3px; }
   .toggle-btn { padding: 5px 16px; border-radius: 40px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
   .toggle-btn.active { background: var(--text); color: var(--bg); }
-
-  /* METRIC CARDS */
   .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
   .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
-  .metric { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .metric { background: var(--surface2); border-radius: var(--radius); padding: 16px; }
   .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
   .metric-value { font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace; letter-spacing: -0.5px; }
   .metric-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
   .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 10px; }
   .card-title { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; font-weight: 500; }
-
-  /* ROWS */
   .row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
   .row:last-child { border-bottom: none; }
   .row-label { font-size: 13px; color: var(--text); }
   .row-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
   .row-amount { font-size: 13px; font-weight: 500; font-family: 'DM Mono', monospace; }
-
-  /* COLORS */
   .c-green { color: var(--green); }
   .c-red { color: var(--red); }
   .c-blue { color: var(--blue); }
   .c-amber { color: var(--amber); }
   .c-dim { color: var(--text3); }
-
-  /* BADGES */
   .badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; display: inline-block; }
   .badge-green { background: var(--green-dim); color: var(--green); }
   .badge-blue { background: var(--blue-dim); color: var(--blue); }
   .badge-amber { background: var(--amber-dim); color: var(--amber); }
   .badge-red { background: var(--red-dim); color: var(--red); }
-  .badge-gray { background: rgba(255,255,255,0.05); color: var(--text2); }
-
-  /* VENCIMIENTOS */
+  .badge-gray { background: var(--surface2); color: var(--text2); }
   .venc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
-  .venc-card { background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .venc-card { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
   .venc-dia { font-size: 10px; color: var(--text3); margin-bottom: 4px; font-family: 'DM Mono', monospace; }
   .venc-nombre { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 5px; }
   .venc-monto { font-size: 12px; font-weight: 500; font-family: 'DM Mono', monospace; }
   .venc-badge { margin-top: 6px; }
-
-  /* CUOTAS */
-  .cuota-pill { font-size: 10px; background: rgba(255,255,255,0.06); color: var(--text3); padding: 1px 6px; border-radius: 20px; margin-left: 6px; }
-
-  /* BARRA */
+  .cuota-pill { font-size: 10px; background: var(--surface2); color: var(--text3); padding: 1px 6px; border-radius: 20px; margin-left: 6px; }
   .bar-bg { background: var(--surface2); border-radius: 4px; height: 4px; flex: 1; margin: 0 10px; }
   .bar-fill { height: 4px; border-radius: 4px; }
   .progress-row { display: flex; align-items: center; margin-bottom: 10px; }
   .progress-label { font-size: 12px; color: var(--text2); min-width: 100px; }
   .progress-pct { font-size: 12px; font-weight: 500; min-width: 35px; text-align: right; color: var(--text2); }
-
-  /* FLUJO TABLE */
   .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 0.5px solid var(--border); }
   table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px; }
   th { padding: 10px 12px; text-align: right; background: var(--surface2); color: var(--text2); font-weight: 500; font-size: 11px; border-bottom: 0.5px solid var(--border); }
   th:first-child { text-align: left; }
-  td { padding: 8px 12px; text-align: right; border-bottom: 0.5px solid var(--border); font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
+  td { padding: 8px 12px; text-align: right; border-bottom: 0.5px solid var(--border); font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); background: var(--surface); }
   td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; color: var(--text2); font-size: 12px; }
   tr:last-child td { border-bottom: none; }
   .tr-section td { background: var(--surface2); color: var(--text3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'DM Sans', sans-serif; padding: 6px 12px; }
-  .tr-total td { font-weight: 600; background: rgba(255,255,255,0.02); }
+  .tr-total td { font-weight: 600; background: rgba(0,0,0,0.02); }
   .tr-saldo td { font-weight: 600; font-size: 13px; background: var(--surface2); border-top: 0.5px solid var(--border2); }
-  .tr-acum td { font-weight: 600; font-size: 13px; border-top: 1px solid var(--border2); }
-  .tr-patrimonio td { font-weight: 600; font-size: 13px; background: rgba(62,207,142,0.05); border-top: 1px solid rgba(62,207,142,0.2); }
+  .tr-acum td { font-weight: 600; font-size: 13px; border-top: 1px solid var(--border2); background: var(--surface); }
+  .tr-patrimonio td { font-weight: 600; font-size: 13px; background: rgba(26,122,74,0.05); border-top: 1px solid rgba(26,122,74,0.2); }
   .proy { color: var(--text3) !important; font-style: italic; }
-
-  /* TOTAL FOOTER */
-  .total-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 12px 16px; background: var(--surface2); border-radius: var(--radius-sm); border: 0.5px solid var(--border); }
-
+  .total-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 12px 16px; background: var(--surface2); border-radius: var(--radius-sm); }
   @media (max-width: 600px) {
     .grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -143,166 +116,71 @@
   <div class="usd-chip">
     <div class="usd-dot"></div>
     <span class="usd-label">USD BNA vendedor</span>
-    <span class="usd-value" id="usd-chip-val">$1.390</span>
-    <span class="usd-date" id="usd-chip-date">Abr 2026</span>
+    <span class="usd-value">$1.390</span>
+    <span class="usd-date">Abr 2026</span>
   </div>
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="showTab('mes')">Este mes</button>
-  <button class="tab" onclick="showTab('flujo')">Flujo de fondos</button>
-  <button class="tab" onclick="showTab('ahorros')">Ahorros</button>
+  <button class="tab active" onclick="showTab('mes',event)">Este mes</button>
+  <button class="tab" onclick="showTab('flujo',event)">Flujo de fondos</button>
+  <button class="tab" onclick="showTab('ahorros',event)">Ahorros</button>
 </div>
 
 <!-- TAB: ESTE MES -->
 <div class="content active" id="tab-mes">
   <div class="toolbar">
     <div class="toggle-group">
-      <button class="toggle-btn active" onclick="setMoneda('ARS','mes')">ARS</button>
-      <button class="toggle-btn" onclick="setMoneda('USD','mes')">USD</button>
+      <button class="toggle-btn active" onclick="setMoneda('ARS','mes',event)">ARS</button>
+      <button class="toggle-btn" onclick="setMoneda('USD','mes',event)">USD</button>
     </div>
   </div>
-
   <div class="grid-4">
-    <div class="metric">
-      <p class="metric-label">Sueldo</p>
-      <p class="metric-value c-green" id="m-sueldo">$2.138.000</p>
-      <p class="metric-sub">Principios de mes</p>
-    </div>
-    <div class="metric">
-      <p class="metric-label">A cobrar Agritest</p>
-      <p class="metric-value c-blue" id="m-agritest">$0</p>
-      <p class="metric-sub">Día 20</p>
-    </div>
-    <div class="metric">
-      <p class="metric-label">Gastos fijos</p>
-      <p class="metric-value c-red" id="m-fijos">-$174.427</p>
-      <p class="metric-sub">Suscripciones + obligaciones</p>
-    </div>
-    <div class="metric">
-      <p class="metric-label">Saldo estimado</p>
-      <p class="metric-value c-green" id="m-saldo">$1.963.573</p>
-      <p class="metric-sub">Al cierre del mes</p>
-    </div>
+    <div class="metric"><p class="metric-label">Sueldo</p><p class="metric-value c-green" id="m-sueldo">$2.138.000</p><p class="metric-sub">Principios de mes</p></div>
+    <div class="metric"><p class="metric-label">A cobrar Agritest</p><p class="metric-value c-blue" id="m-agritest">$0</p><p class="metric-sub">Día 20</p></div>
+    <div class="metric"><p class="metric-label">Gastos fijos</p><p class="metric-value c-red" id="m-fijos">-$174.427</p><p class="metric-sub">Suscripciones + obligaciones</p></div>
+    <div class="metric"><p class="metric-label">Saldo estimado</p><p class="metric-value c-green" id="m-saldo">$1.963.573</p><p class="metric-sub">Al cierre del mes</p></div>
   </div>
-
   <div class="grid-2">
     <div class="card">
       <p class="card-title">Flujo del mes</p>
-      <div class="row">
-        <div><p class="row-label c-green">Sueldo</p><p class="row-sub">Principios de mes · BNA</p></div>
-        <p class="row-amount c-green" id="r-sueldo">+$2.138.000</p>
-      </div>
-      <div class="row">
-        <div><p class="row-label c-green">Reembolso Agritest</p><p class="row-sub">Día 20</p></div>
-        <p class="row-amount c-green" id="r-agritest">+$0</p>
-      </div>
-      <div class="row">
-        <div><p class="row-label">Monotributo</p><p class="row-sub">Día 18 · Mercado Pago</p></div>
-        <p class="row-amount c-red" id="r-mono">-$81.542</p>
-      </div>
-      <div class="row">
-        <div><p class="row-label">Starlink</p><p class="row-sub">Día 20 · Mercado Pago</p></div>
-        <p class="row-amount c-red" id="r-starlink">-$63.000</p>
-      </div>
-      <div class="row">
-        <div><p class="row-label">Microsoft</p><p class="row-sub">Día 12 · Mercado Pago</p></div>
-        <p class="row-amount c-red" id="r-microsoft">-$4.885</p>
-      </div>
-      <div class="row">
-        <div><p class="row-label">Claude <span class="cuota-pill">USD 20</span></p><p class="row-sub">Día 15 · Cocos</p></div>
-        <p class="row-amount c-red" id="r-claude">-$27.800</p>
-      </div>
-      <div class="row">
-        <div><p class="row-label">iCloud <span class="cuota-pill">USD 3.8</span></p><p class="row-sub">Día 29 · Mercado Pago</p></div>
-        <p class="row-amount c-red" id="r-icloud">-$5.282</p>
-      </div>
-      <div class="row">
-        <div><p class="row-label">Tarjeta BNA <span class="cuota-pill">cuota 1/3</span></p><p class="row-sub">Día 20 · BNA home banking</p></div>
-        <p class="row-amount c-red" id="r-tarjeta">-$24.289</p>
-      </div>
+      <div class="row"><div><p class="row-label c-green">Sueldo</p><p class="row-sub">Principios de mes · BNA</p></div><p class="row-amount c-green" id="r-sueldo">+$2.138.000</p></div>
+      <div class="row"><div><p class="row-label c-green">Reembolso Agritest</p><p class="row-sub">Día 20</p></div><p class="row-amount c-green" id="r-agritest">+$0</p></div>
+      <div class="row"><div><p class="row-label">Monotributo</p><p class="row-sub">Día 18 · Mercado Pago</p></div><p class="row-amount c-red" id="r-mono">-$81.542</p></div>
+      <div class="row"><div><p class="row-label">Starlink</p><p class="row-sub">Día 20 · Mercado Pago</p></div><p class="row-amount c-red" id="r-starlink">-$63.000</p></div>
+      <div class="row"><div><p class="row-label">Microsoft</p><p class="row-sub">Día 12 · Mercado Pago</p></div><p class="row-amount c-red" id="r-microsoft">-$4.885</p></div>
+      <div class="row"><div><p class="row-label">Claude <span class="cuota-pill">USD 20</span></p><p class="row-sub">Día 15 · Cocos</p></div><p class="row-amount c-red" id="r-claude">-$27.800</p></div>
+      <div class="row"><div><p class="row-label">iCloud <span class="cuota-pill">USD 3.8</span></p><p class="row-sub">Día 29 · Mercado Pago</p></div><p class="row-amount c-red" id="r-icloud">-$5.282</p></div>
+      <div class="row"><div><p class="row-label">Tarjeta BNA <span class="cuota-pill">cuota 1/3</span></p><p class="row-sub">Día 20 · BNA home banking</p></div><p class="row-amount c-red" id="r-tarjeta">-$24.289</p></div>
       <div class="total-footer">
-        <p style="font-size:13px; color:var(--text2); font-weight:500;">Balance del mes</p>
-        <p style="font-size:16px; font-weight:600; font-family:'DM Mono',monospace;" class="c-green" id="r-balance">+$1.931.202</p>
+        <p style="font-size:13px;color:var(--text2);font-weight:500;">Balance del mes</p>
+        <p style="font-size:16px;font-weight:600;font-family:'DM Mono',monospace;" class="c-green" id="r-balance">+$1.931.202</p>
       </div>
     </div>
-
     <div>
       <div class="card">
         <p class="card-title">Gastos para Agritest</p>
-        <div style="text-align:center; padding: 20px 0;">
-          <p style="font-size:13px; color:var(--text3);">Sin gastos cargados este mes</p>
-          <p style="font-size:11px; color:var(--text3); margin-top:4px;">Escribile al bot "para Agritest gasté..."</p>
-        </div>
-        <div class="total-footer">
-          <p style="font-size:13px; color:var(--text2); font-weight:500;">Total a cobrar el 20</p>
-          <p style="font-size:15px; font-weight:600; font-family:'DM Mono',monospace;" class="c-blue">$0</p>
-        </div>
+        <div style="text-align:center;padding:20px 0;"><p style="font-size:13px;color:var(--text3);">Sin gastos cargados este mes</p><p style="font-size:11px;color:var(--text3);margin-top:4px;">Escribile al bot "para Agritest gasté..."</p></div>
+        <div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;" class="c-blue">$0</p></div>
       </div>
-
       <div class="card">
         <p class="card-title">Cuotas pendientes</p>
-        <div class="row">
-          <div><p class="row-label">Compra 19/04</p><p class="row-sub">Cuota 1/3 · vence Mayo</p></div>
-          <p class="row-amount c-red">-$24.289</p>
-        </div>
-        <div class="row">
-          <div><p class="row-label c-dim">Cuota 2/3 · Junio</p></div>
-          <p class="row-amount c-dim">-$24.289</p>
-        </div>
-        <div class="row">
-          <div><p class="row-label c-dim">Cuota 3/3 · Julio</p></div>
-          <p class="row-amount c-dim">-$24.289</p>
-        </div>
+        <div class="row"><div><p class="row-label">Compra 19/04</p><p class="row-sub">Cuota 1/3 · vence Mayo</p></div><p class="row-amount c-red">-$24.289</p></div>
+        <div class="row"><div><p class="row-label c-dim">Cuota 2/3 · Junio</p></div><p class="row-amount c-dim">-$24.289</p></div>
+        <div class="row"><div><p class="row-label c-dim">Cuota 3/3 · Julio</p></div><p class="row-amount c-dim">-$24.289</p></div>
       </div>
     </div>
   </div>
-
   <div class="card">
     <p class="card-title">Vencimientos del mes</p>
     <div class="venc-grid">
-      <div class="venc-card">
-        <p class="venc-dia">Día 12</p>
-        <p class="venc-nombre">Microsoft</p>
-        <p class="venc-monto c-red">$4.885</p>
-        <div class="venc-badge"><span class="badge badge-blue">MP</span></div>
-      </div>
-      <div class="venc-card">
-        <p class="venc-dia">Día 15</p>
-        <p class="venc-nombre">Claude</p>
-        <p class="venc-monto c-red">USD 20</p>
-        <div class="venc-badge"><span class="badge badge-green">Cocos</span></div>
-      </div>
-      <div class="venc-card">
-        <p class="venc-dia">Día 18</p>
-        <p class="venc-nombre">Monotributo</p>
-        <p class="venc-monto c-red">$81.542</p>
-        <div class="venc-badge"><span class="badge badge-blue">MP</span></div>
-      </div>
-      <div class="venc-card">
-        <p class="venc-dia">Día 20</p>
-        <p class="venc-nombre">Starlink</p>
-        <p class="venc-monto c-red">$63.000</p>
-        <div class="venc-badge"><span class="badge badge-blue">MP</span></div>
-      </div>
-      <div class="venc-card">
-        <p class="venc-dia">Día 20</p>
-        <p class="venc-nombre">Tarjeta BNA</p>
-        <p class="venc-monto c-red">$24.289</p>
-        <div class="venc-badge"><span class="badge badge-gray">BNA</span></div>
-      </div>
-      <div class="venc-card">
-        <p class="venc-dia">Día 20</p>
-        <p class="venc-nombre">Agritest cobro</p>
-        <p class="venc-monto c-green">+$0</p>
-        <div class="venc-badge"><span class="badge badge-green">Transf.</span></div>
-      </div>
-      <div class="venc-card">
-        <p class="venc-dia">Día 29</p>
-        <p class="venc-nombre">iCloud</p>
-        <p class="venc-monto c-red">USD 3.8</p>
-        <div class="venc-badge"><span class="badge badge-blue">MP</span></div>
-      </div>
+      <div class="venc-card"><p class="venc-dia">Día 12</p><p class="venc-nombre">Microsoft</p><p class="venc-monto c-red">$4.885</p><div class="venc-badge"><span class="badge badge-blue">MP</span></div></div>
+      <div class="venc-card"><p class="venc-dia">Día 15</p><p class="venc-nombre">Claude</p><p class="venc-monto c-red">USD 20</p><div class="venc-badge"><span class="badge badge-green">Cocos</span></div></div>
+      <div class="venc-card"><p class="venc-dia">Día 18</p><p class="venc-nombre">Monotributo</p><p class="venc-monto c-red">$81.542</p><div class="venc-badge"><span class="badge badge-blue">MP</span></div></div>
+      <div class="venc-card"><p class="venc-dia">Día 20</p><p class="venc-nombre">Starlink</p><p class="venc-monto c-red">$63.000</p><div class="venc-badge"><span class="badge badge-blue">MP</span></div></div>
+      <div class="venc-card"><p class="venc-dia">Día 20</p><p class="venc-nombre">Tarjeta BNA</p><p class="venc-monto c-red">$24.289</p><div class="venc-badge"><span class="badge badge-gray">BNA</span></div></div>
+      <div class="venc-card"><p class="venc-dia">Día 20</p><p class="venc-nombre">Agritest cobro</p><p class="venc-monto c-green">+$0</p><div class="venc-badge"><span class="badge badge-green">Transf.</span></div></div>
+      <div class="venc-card"><p class="venc-dia">Día 29</p><p class="venc-nombre">iCloud</p><p class="venc-monto c-red">USD 3.8</p><div class="venc-badge"><span class="badge badge-blue">MP</span></div></div>
     </div>
   </div>
 </div>
@@ -311,161 +189,55 @@
 <div class="content" id="tab-flujo">
   <div class="toolbar">
     <div class="toggle-group">
-      <button class="toggle-btn active" onclick="setMoneda('ARS','flujo')">ARS</button>
-      <button class="toggle-btn" onclick="setMoneda('USD','flujo')">USD</button>
+      <button class="toggle-btn active" onclick="setMoneda('ARS','flujo',event)">ARS</button>
+      <button class="toggle-btn" onclick="setMoneda('USD','flujo',event)">USD</button>
     </div>
   </div>
-  <div class="table-wrap">
-    <table id="tabla-flujo"></table>
-  </div>
-  <p style="font-size:11px; color:var(--text3); margin-top:10px;">* Proyección basada en gastos fijos conocidos. USD a $1.390 BNA vendedor. Las filas en gris itálico son proyectadas.</p>
+  <div class="table-wrap"><table id="tabla-flujo"></table></div>
+  <p style="font-size:11px;color:var(--text3);margin-top:10px;">* Proyección basada en gastos fijos conocidos. USD a $1.390 BNA vendedor. Patrimonio incluye $1.300.000 de ahorro mensual estimado.</p>
 </div>
 
 <!-- TAB: AHORROS -->
 <div class="content" id="tab-ahorros">
   <div class="toolbar">
     <div class="toggle-group">
-      <button class="toggle-btn active" onclick="setMoneda('ARS','ahorros')">ARS</button>
-      <button class="toggle-btn" onclick="setMoneda('USD','ahorros')">USD</button>
+      <button class="toggle-btn active" onclick="setMoneda('ARS','ahorros',event)">ARS</button>
+      <button class="toggle-btn" onclick="setMoneda('USD','ahorros',event)">USD</button>
     </div>
   </div>
-
   <div class="grid-3">
-    <div class="metric">
-      <p class="metric-label">Total patrimonio</p>
-      <p class="metric-value c-green" id="a-total">$27.654.944</p>
-      <p class="metric-sub">Pesos + USD convertido</p>
-    </div>
-    <div class="metric">
-      <p class="metric-label">En pesos (fondos)</p>
-      <p class="metric-value c-blue" id="a-pesos">$23.798.419</p>
-      <p class="metric-sub">Balanz + Cocos + IOL</p>
-    </div>
-    <div class="metric">
-      <p class="metric-label">En dólares</p>
-      <p class="metric-value c-amber" id="a-usd">USD 2.043</p>
-      <p class="metric-sub">Binance + efectivo</p>
-    </div>
+    <div class="metric"><p class="metric-label">Total patrimonio</p><p class="metric-value c-green" id="a-total">$26.638.189</p><p class="metric-sub">Pesos + USD convertido</p></div>
+    <div class="metric"><p class="metric-label">En pesos (fondos)</p><p class="metric-value c-blue" id="a-pesos">$23.798.419</p><p class="metric-sub">Balanz + Cocos + IOL</p></div>
+    <div class="metric"><p class="metric-label">En dólares</p><p class="metric-value c-amber" id="a-usd">USD 2.043</p><p class="metric-sub">Binance + efectivo</p></div>
   </div>
-
   <div class="grid-2">
     <div class="card">
       <p class="card-title">Detalle por plataforma</p>
-      <div class="row">
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-            <p class="row-label">Balanz</p>
-            <span class="badge badge-amber">LECAP · BCAHA</span>
-          </div>
-          <p class="row-sub">~35% anual · T+0 · Rend. mensual: <span class="c-green" id="a-balanz-rend">+$494.119</span></p>
-        </div>
-        <p class="row-amount c-blue" id="a-balanz">$16.859.814</p>
-      </div>
-      <div class="row">
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-            <p class="row-label">Cocos Capital</p>
-            <span class="badge badge-green">Cocos Pesos Plus</span>
-          </div>
-          <p class="row-sub">~30% anual · Rend. mensual: <span class="c-green" id="a-cocos-rend">+$121.049</span></p>
-        </div>
-        <p class="row-amount c-blue" id="a-cocos">$4.841.975</p>
-      </div>
-      <div class="row">
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-            <p class="row-label">IOL</p>
-            <span class="badge badge-amber">CEDEARs</span>
-          </div>
-          <p class="row-sub">Variable · sigue mercado</p>
-        </div>
-        <p class="row-amount c-blue" id="a-iol">$2.096.630</p>
-      </div>
-      <div class="row">
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-            <p class="row-label">Binance</p>
-            <span class="badge badge-amber">BTC / ETH</span>
-          </div>
-          <p class="row-sub">~USD 71 BTC · ~USD 72 ETH</p>
-        </div>
-        <p class="row-amount c-amber" id="a-binance">USD 143</p>
-      </div>
-      <div class="row">
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-            <p class="row-label">Efectivo</p>
-            <span class="badge badge-gray">Cash USD</span>
-          </div>
-          <p class="row-sub">Billetes físicos</p>
-        </div>
-        <p class="row-amount c-amber" id="a-efectivo">USD 1.900</p>
-      </div>
-      <div class="total-footer">
-        <div>
-          <p style="font-size:11px; color:var(--text2);">Rendimiento fijo mensual estimado</p>
-        </div>
-        <p style="font-size:15px; font-weight:600; font-family:'DM Mono',monospace;" class="c-green" id="a-rend-total">+$615.168</p>
-      </div>
+      <div class="row"><div style="flex:1;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><p class="row-label">Balanz</p><span class="badge badge-amber">LECAP · BCAHA</span></div><p class="row-sub">~35% anual · T+0 · Rend. mensual: <span class="c-green" id="a-balanz-rend">+$494.119</span></p></div><p class="row-amount c-blue" id="a-balanz">$16.859.814</p></div>
+      <div class="row"><div style="flex:1;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><p class="row-label">Cocos Capital</p><span class="badge badge-green">Cocos Pesos Plus</span></div><p class="row-sub">~30% anual · Rend. mensual: <span class="c-green" id="a-cocos-rend">+$121.049</span></p></div><p class="row-amount c-blue" id="a-cocos">$4.841.975</p></div>
+      <div class="row"><div style="flex:1;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><p class="row-label">IOL</p><span class="badge badge-amber">CEDEARs</span></div><p class="row-sub">Variable · sigue mercado</p></div><p class="row-amount c-blue" id="a-iol">$2.096.630</p></div>
+      <div class="row"><div style="flex:1;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><p class="row-label">Binance</p><span class="badge badge-amber">BTC / ETH</span></div><p class="row-sub">~USD 71 BTC · ~USD 72 ETH</p></div><p class="row-amount c-amber" id="a-binance">USD 143</p></div>
+      <div class="row"><div style="flex:1;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><p class="row-label">Efectivo</p><span class="badge badge-gray">Cash USD</span></div><p class="row-sub">Billetes físicos</p></div><p class="row-amount c-amber" id="a-efectivo">USD 1.900</p></div>
+      <div class="total-footer"><div><p style="font-size:11px;color:var(--text2);">Rendimiento fijo mensual estimado</p></div><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;" class="c-green" id="a-rend-total">+$615.168</p></div>
     </div>
-
     <div>
       <div class="card">
         <p class="card-title">Distribución</p>
-        <div class="progress-row">
-          <p class="progress-label">Balanz</p>
-          <div class="bar-bg"><div class="bar-fill" style="width:61%; background:#60a5fa;"></div></div>
-          <p class="progress-pct">61%</p>
-        </div>
-        <div class="progress-row">
-          <p class="progress-label">Cocos</p>
-          <div class="bar-bg"><div class="bar-fill" style="width:18%; background:#3ecf8e;"></div></div>
-          <p class="progress-pct">18%</p>
-        </div>
-        <div class="progress-row">
-          <p class="progress-label">IOL</p>
-          <div class="bar-bg"><div class="bar-fill" style="width:8%; background:#fbbf24;"></div></div>
-          <p class="progress-pct">8%</p>
-        </div>
-        <div class="progress-row">
-          <p class="progress-label">Efectivo USD</p>
-          <div class="bar-bg"><div class="bar-fill" style="width:10%; background:#f59e0b;"></div></div>
-          <p class="progress-pct">10%</p>
-        </div>
-        <div class="progress-row" style="margin-bottom:0;">
-          <p class="progress-label">Binance</p>
-          <div class="bar-bg"><div class="bar-fill" style="width:1%; background:#888;"></div></div>
-          <p class="progress-pct">1%</p>
-        </div>
+        <div class="progress-row"><p class="progress-label">Balanz</p><div class="bar-bg"><div class="bar-fill" style="width:61%;background:#1a5fa5;"></div></div><p class="progress-pct">61%</p></div>
+        <div class="progress-row"><p class="progress-label">Cocos</p><div class="bar-bg"><div class="bar-fill" style="width:18%;background:#1a7a4a;"></div></div><p class="progress-pct">18%</p></div>
+        <div class="progress-row"><p class="progress-label">IOL</p><div class="bar-bg"><div class="bar-fill" style="width:8%;background:#8a5f00;"></div></div><p class="progress-pct">8%</p></div>
+        <div class="progress-row"><p class="progress-label">Efectivo USD</p><div class="bar-bg"><div class="bar-fill" style="width:10%;background:#c07800;"></div></div><p class="progress-pct">10%</p></div>
+        <div class="progress-row" style="margin-bottom:0;"><p class="progress-label">Binance</p><div class="bar-bg"><div class="bar-fill" style="width:1%;background:#8a9aaa;"></div></div><p class="progress-pct">1%</p></div>
       </div>
-
       <div class="card">
-        <p class="card-title">Proyección a 6 meses (interés compuesto)</p>
-        <div class="row">
-          <p class="row-label">Mayo 2026</p>
-          <p class="row-amount c-green" id="proy-1">$24.413.587</p>
-        </div>
-        <div class="row">
-          <p class="row-label">Junio 2026</p>
-          <p class="row-amount c-green" id="proy-2">$25.044.006</p>
-        </div>
-        <div class="row">
-          <p class="row-label">Julio 2026</p>
-          <p class="row-amount c-green" id="proy-3">$25.694.546</p>
-        </div>
-        <div class="row">
-          <p class="row-label">Agosto 2026</p>
-          <p class="row-amount c-green" id="proy-4">$26.365.747</p>
-        </div>
-        <div class="row">
-          <p class="row-label">Septiembre 2026</p>
-          <p class="row-amount c-green" id="proy-5">$27.058.172</p>
-        </div>
-        <div class="row">
-          <p class="row-label">Octubre 2026</p>
-          <p class="row-amount c-green" id="proy-6">$27.772.400</p>
-        </div>
-        <p style="font-size:10px; color:var(--text3); margin-top:10px;">Solo fondos en pesos (Balanz 35% + Cocos 30% anual). No incluye IOL ni crypto.</p>
+        <p class="card-title">Proyección a 6 meses (interés compuesto + ahorro $1.300.000/mes)</p>
+        <div class="row"><p class="row-label">Mayo 2026</p><p class="row-amount c-green" id="proy-1">-</p></div>
+        <div class="row"><p class="row-label">Junio 2026</p><p class="row-amount c-green" id="proy-2">-</p></div>
+        <div class="row"><p class="row-label">Julio 2026</p><p class="row-amount c-green" id="proy-3">-</p></div>
+        <div class="row"><p class="row-label">Agosto 2026</p><p class="row-amount c-green" id="proy-4">-</p></div>
+        <div class="row"><p class="row-label">Septiembre 2026</p><p class="row-amount c-green" id="proy-5">-</p></div>
+        <div class="row"><p class="row-label">Octubre 2026</p><p class="row-amount c-green" id="proy-6">-</p></div>
+        <p style="font-size:10px;color:var(--text3);margin-top:10px;">Incluye Balanz 35% + Cocos 30% anual + IOL fijo + USD fijo + ahorro mensual.</p>
       </div>
     </div>
   </div>
@@ -473,202 +245,150 @@
 
 <script>
 const USD = 1390;
-let monedaMes = 'ARS', monedaFlujo = 'ARS', monedaAhorros = 'ARS';
+const ahorroMensual = 1300000;
+let monedaMes='ARS', monedaFlujo='ARS', monedaAhorros='ARS';
 
-// Fecha
-const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const mesesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const hoy = new Date();
-document.getElementById('fecha-header').textContent = meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
+document.getElementById('fecha-header').textContent = mesesNombre[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
 function fmt(n, moneda) {
-  if (moneda === 'USD') return 'USD ' + Math.round(n / USD).toLocaleString('es-AR');
+  if (moneda === 'USD') return 'USD ' + Math.round(n/USD).toLocaleString('es-AR');
   return '$' + Math.round(n).toLocaleString('es-AR');
 }
 
-// TABS
-function showTab(tab) {
+function showTab(tab, e) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
+  e.target.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
 }
 
-// MONEDA TOGGLE
-function setMoneda(m, tab) {
-  const btns = event.target.parentElement.querySelectorAll('.toggle-btn');
+function setMoneda(m, tab, e) {
+  const btns = e.target.parentElement.querySelectorAll('.toggle-btn');
   btns.forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  if (tab === 'mes') { monedaMes = m; renderMes(); }
-  if (tab === 'flujo') { monedaFlujo = m; renderFlujo(); }
-  if (tab === 'ahorros') { monedaAhorros = m; renderAhorros(); }
+  e.target.classList.add('active');
+  if (tab==='mes') { monedaMes=m; renderMes(); }
+  if (tab==='flujo') { monedaFlujo=m; renderFlujo(); }
+  if (tab==='ahorros') { monedaAhorros=m; renderAhorros(); }
 }
 
-// DATOS
-const sueldo = 2138000;
-const agritest = 0;
-const mono = 81541.85;
-const starlink = 63000;
-const microsoft = 4885;
-const claudeUSD = 20 * USD;
-const icloudUSD = 3.8 * USD;
-const tarjeta1 = 24289;
-const tarjeta2 = 24289;
-const tarjeta3 = 24289;
-const gdriveUSD = 20 * USD; // agosto
+const sueldo=2138000, agritest=0, mono=81541.85, starlink=63000, microsoft=4885;
+const claudeUSD=20*USD, icloudUSD=3.8*USD, tarjeta1=24289, tarjeta2=24289, tarjeta3=24289;
+const gdriveUSD=20*USD;
+const fijosBase=mono+starlink+microsoft+claudeUSD+icloudUSD+tarjeta1;
+const balance=sueldo+agritest-fijosBase;
 
-const fijosBase = mono + starlink + microsoft + claudeUSD + icloudUSD + tarjeta1;
-const balance = sueldo + agritest - fijosBase;
-
-// MES
 function renderMes() {
-  const m = monedaMes;
-  document.getElementById('m-sueldo').textContent = fmt(sueldo, m);
-  document.getElementById('m-agritest').textContent = fmt(agritest, m);
-  document.getElementById('m-fijos').textContent = '-' + fmt(fijosBase, m);
-  document.getElementById('m-saldo').textContent = fmt(balance, m);
-  document.getElementById('r-sueldo').textContent = '+' + fmt(sueldo, m);
-  document.getElementById('r-agritest').textContent = '+' + fmt(agritest, m);
-  document.getElementById('r-mono').textContent = '-' + fmt(mono, m);
-  document.getElementById('r-starlink').textContent = '-' + fmt(starlink, m);
-  document.getElementById('r-microsoft').textContent = '-' + fmt(microsoft, m);
-  document.getElementById('r-claude').textContent = '-' + fmt(claudeUSD, m);
-  document.getElementById('r-icloud').textContent = '-' + fmt(icloudUSD, m);
-  document.getElementById('r-tarjeta').textContent = '-' + fmt(tarjeta1, m);
-  document.getElementById('r-balance').textContent = '+' + fmt(balance, m);
+  const m=monedaMes;
+  document.getElementById('m-sueldo').textContent=fmt(sueldo,m);
+  document.getElementById('m-agritest').textContent=fmt(agritest,m);
+  document.getElementById('m-fijos').textContent='-'+fmt(fijosBase,m);
+  document.getElementById('m-saldo').textContent=fmt(balance,m);
+  document.getElementById('r-sueldo').textContent='+'+fmt(sueldo,m);
+  document.getElementById('r-agritest').textContent='+'+fmt(agritest,m);
+  document.getElementById('r-mono').textContent='-'+fmt(mono,m);
+  document.getElementById('r-starlink').textContent='-'+fmt(starlink,m);
+  document.getElementById('r-microsoft').textContent='-'+fmt(microsoft,m);
+  document.getElementById('r-claude').textContent='-'+fmt(claudeUSD,m);
+  document.getElementById('r-icloud').textContent='-'+fmt(icloudUSD,m);
+  document.getElementById('r-tarjeta').textContent='-'+fmt(tarjeta1,m);
+  document.getElementById('r-balance').textContent='+'+fmt(balance,m);
 }
 
-// FLUJO
 const flujoDatos = {
-  meses: ['Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-  real:  [true, false,false,false,false,false,false,false,false],
-  sueldo:    [sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo],
+  meses:['Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+  real:[true,false,false,false,false,false,false,false,false],
+  sueldo:[sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo],
   agritest_i:[0,0,0,0,0,0,0,0,0],
-  mono_g:    [mono,mono,mono,mono,mono,mono,mono,mono,mono],
+  mono_g:[mono,mono,mono,mono,mono,mono,mono,mono,mono],
   starlink_g:[63000,63000,63000,63000,63000,63000,63000,63000,63000],
-  ms_g:      [4885,4885,4885,4885,4885,4885,4885,4885,4885],
-  claude_g:  [claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD],
-  icloud_g:  [icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD],
-  gdrive_g:  [0,0,0,0,gdriveUSD,0,0,0,0],
-  tarjeta_g: [tarjeta1,tarjeta2,tarjeta3,0,0,0,0,0,0],
-  variables: [0,0,0,0,0,0,0,0,0],
+  ms_g:[4885,4885,4885,4885,4885,4885,4885,4885,4885],
+  claude_g:[claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD],
+  icloud_g:[icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD],
+  gdrive_g:[0,0,0,0,gdriveUSD,0,0,0,0],
+  tarjeta_g:[tarjeta1,tarjeta2,tarjeta3,0,0,0,0,0,0],
+  variables:[0,0,0,0,0,0,0,0,0],
 };
 
-// Ahorros (fondos en pesos con interés compuesto)
-const balanzInicial = 16859814;
-const cocosInicial = 4841975;
-const balanzTasa = 0.35/12;
-const cocosTasa = 0.30/12;
+const balanzInicial=16859814, cocosInicial=4841975, iol=2096630;
+const usdTotal=(143+1900)*USD;
+const balanzTasa=0.35/12, cocosTasa=0.30/12;
 
 function renderFlujo() {
-  const m = monedaFlujo;
-  const n = flujoDatos.meses.length;
-  const f = (v, i) => {
-    const cls = flujoDatos.real[i] ? '' : 'proy';
-    return `<td class="${cls}">${fmt(v, m)}</td>`;
-  };
+  const m=monedaFlujo;
+  const n=flujoDatos.meses.length;
+  const totalIng=Array(n).fill(0).map((_,i)=>flujoDatos.sueldo[i]+flujoDatos.agritest_i[i]);
+  const totalFij=Array(n).fill(0).map((_,i)=>flujoDatos.mono_g[i]+flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
+  const totalEgr=Array(n).fill(0).map((_,i)=>totalFij[i]+flujoDatos.variables[i]);
+  const saldoMes=Array(n).fill(0).map((_,i)=>totalIng[i]-totalEgr[i]);
 
-  const totalIng = Array(n).fill(0).map((_,i) => flujoDatos.sueldo[i] + flujoDatos.agritest_i[i]);
-  const totalFij = Array(n).fill(0).map((_,i) =>
-    flujoDatos.mono_g[i] + flujoDatos.starlink_g[i] + flujoDatos.ms_g[i] +
-    flujoDatos.claude_g[i] + flujoDatos.icloud_g[i] + flujoDatos.gdrive_g[i] + flujoDatos.tarjeta_g[i]);
-  const totalEgr = Array(n).fill(0).map((_,i) => totalFij[i] + flujoDatos.variables[i]);
-  const saldoMes = Array(n).fill(0).map((_,i) => totalIng[i] - totalEgr[i]);
-  let acum = 0;
-  const saldoAcum = saldoMes.map(s => { acum += s; return acum; });
+  let b=balanzInicial, c=cocosInicial;
+  const balanzProy=[], cocosProy=[];
+  for(let i=0;i<n;i++){b=b*(1+balanzTasa);c=c*(1+cocosTasa);balanzProy.push(b);cocosProy.push(c);}
 
-  // Ahorros proyectados
-  let b = balanzInicial, c = cocosInicial;
-  const balanzProy = [], cocosProy = [], fondosTotalProy = [];
-  for (let i = 0; i < n; i++) {
-    b = b * (1 + balanzTasa);
-    c = c * (1 + cocosTasa);
-    balanzProy.push(b);
-    cocosProy.push(c);
-    fondosTotalProy.push(b + c);
-  }
+  const patrimonioTotal=balanzProy.map((bp,i)=>bp+cocosProy[i]+iol+usdTotal+(ahorroMensual*(i+1)));
 
-  const iol = 2096630;
-  const usdTotal = (143 + 1900) * USD;
-  const patrimonioTotal = fondosTotalProy.map(f => f + iol + usdTotal + acum);
+  const mesesHdr=flujoDatos.meses.map((mes,i)=>`<th>${mes} <span style="font-weight:400;color:${flujoDatos.real[i]?'var(--text2)':'var(--text3)'};">${flujoDatos.real[i]?'real':'proy'}</span></th>`).join('');
 
-  const mesesHdr = flujoDatos.meses.map((mes, i) =>
-    `<th>${mes} <span style="font-weight:400;color:${flujoDatos.real[i]?'var(--text2)':'var(--text3)'};">${flujoDatos.real[i]?'real':'proy'}</span></th>`).join('');
+  const row=(label,arr,cls)=>`<tr><td>${label}</td>${arr.map((v,i)=>{const c2=flujoDatos.real[i]?'':'proy';return`<td class="${c2} ${cls}">${fmt(v,m)}</td>`;}).join('')}</tr>`;
 
-  const row = (label, arr, cls) => `<tr><td>${label}</td>${arr.map((v,i) => {
-    const c2 = flujoDatos.real[i] ? '' : 'proy';
-    return `<td class="${c2} ${cls}">${fmt(v,m)}</td>`;
-  }).join('')}</tr>`;
-
-  const sRow = (label, arr, cls) => `<tr class="tr-saldo"><td>${label}</td>${arr.map((v,i) => {
-    const c2 = flujoDatos.real[i] ? '' : 'proy';
-    return `<td class="${c2} ${cls || (v>=0?'c-green':'c-red')}">${fmt(v,m)}</td>`;
-  }).join('')}</tr>`;
-
-  document.getElementById('tabla-flujo').innerHTML = `
+  document.getElementById('tabla-flujo').innerHTML=`
     <thead><tr><th style="min-width:160px;">Concepto</th>${mesesHdr}</tr></thead>
     <tbody>
       <tr class="tr-section"><td colspan="10">Ingresos</td></tr>
-      ${row('Sueldo', flujoDatos.sueldo, 'c-green')}
-      ${row('Reembolso Agritest', flujoDatos.agritest_i, 'c-green')}
+      ${row('Sueldo',flujoDatos.sueldo,'c-green')}
+      ${row('Reembolso Agritest',flujoDatos.agritest_i,'c-green')}
       <tr class="tr-total"><td>Total ingresos</td>${totalIng.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-green">${fmt(v,m)}</td>`).join('')}</tr>
-
       <tr class="tr-section"><td colspan="10">Gastos fijos</td></tr>
-      ${row('Monotributo', flujoDatos.mono_g, 'c-red')}
-      ${row('Starlink', flujoDatos.starlink_g, 'c-red')}
-      ${row('Microsoft', flujoDatos.ms_g, 'c-red')}
-      ${row('Claude (USD 20)', flujoDatos.claude_g, 'c-red')}
-      ${row('iCloud (USD 3.8)', flujoDatos.icloud_g, 'c-red')}
-      ${row('Google Drive anual (ago)', flujoDatos.gdrive_g, 'c-red')}
-      ${row('Tarjeta BNA (cuotas)', flujoDatos.tarjeta_g, 'c-red')}
+      ${row('Monotributo',flujoDatos.mono_g,'c-red')}
+      ${row('Starlink',flujoDatos.starlink_g,'c-red')}
+      ${row('Microsoft',flujoDatos.ms_g,'c-red')}
+      ${row('Claude (USD 20)',flujoDatos.claude_g,'c-red')}
+      ${row('iCloud (USD 3.8)',flujoDatos.icloud_g,'c-red')}
+      ${row('Google Drive anual (ago)',flujoDatos.gdrive_g,'c-red')}
+      ${row('Tarjeta BNA (cuotas)',flujoDatos.tarjeta_g,'c-red')}
       <tr class="tr-total"><td>Total fijos</td>${totalFij.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-red">${fmt(v,m)}</td>`).join('')}</tr>
-
       <tr class="tr-section"><td colspan="10">Gastos variables</td></tr>
-      ${row('Personales + Agritest', flujoDatos.variables, 'c-red')}
+      ${row('Personales + Agritest',flujoDatos.variables,'c-red')}
       <tr class="tr-total"><td>Total egresos</td>${totalEgr.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-red">${fmt(v,m)}</td>`).join('')}</tr>
-
-      ${sRow('Saldo del mes', saldoMes)}
-      ${sRow('Saldo acumulado', saldoAcum)}
-
-      <tr class="tr-section"><td colspan="10">Ahorros (proyección con interés compuesto)</td></tr>
-      ${row('Balanz (35% anual)', balanzProy, 'c-blue')}
-      ${row('Cocos (30% anual)', cocosProy, 'c-blue')}
-      ${row('IOL (CEDEARs)', Array(n).fill(iol), 'c-amber')}
-      ${row('USD (Binance + efectivo)', Array(n).fill(usdTotal), 'c-amber')}
-
+      <tr class="tr-saldo"><td>Saldo del mes</td>${saldoMes.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} ${v>=0?'c-green':'c-red'}">${fmt(v,m)}</td>`).join('')}</tr>
+      <tr class="tr-section"><td colspan="10">Ahorros proyectados (interés compuesto + $1.300.000/mes)</td></tr>
+      ${row('Balanz (35% anual)',balanzProy,'c-blue')}
+      ${row('Cocos (30% anual)',cocosProy,'c-blue')}
+      ${row('IOL (CEDEARs)',Array(n).fill(iol),'c-amber')}
+      ${row('USD (Binance + efectivo)',Array(n).fill(usdTotal),'c-amber')}
       <tr class="tr-patrimonio"><td>Patrimonio total estimado</td>${patrimonioTotal.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-green">${fmt(v,m)}</td>`).join('')}</tr>
     </tbody>`;
 }
 
-// AHORROS
 function renderAhorros() {
-  const m = monedaAhorros;
-  const balanz = balanzInicial, cocos = cocosInicial, iol = 2096630;
-  const binanceUSD = 143, efectivoUSD = 1900;
-  const totalUSDpesos = (binanceUSD + efectivoUSD) * USD;
-  const totalPesos = balanz + cocos + iol;
-  const total = totalPesos + totalUSDpesos;
-  const rendBalanz = balanz * balanzTasa;
-  const rendCocos = cocos * cocosTasa;
-  const rendTotal = rendBalanz + rendCocos;
+  const m=monedaAhorros;
+  const balanz=balanzInicial, cocos=cocosInicial;
+  const totalPesos=balanz+cocos+iol;
+  const total=totalPesos+usdTotal;
+  const rendBalanz=balanz*balanzTasa;
+  const rendCocos=cocos*cocosTasa;
+  const rendTotal=rendBalanz+rendCocos;
 
-  document.getElementById('a-total').textContent = fmt(total, m);
-  document.getElementById('a-pesos').textContent = fmt(totalPesos, m);
-  document.getElementById('a-usd').textContent = m === 'USD' ? 'USD ' + (binanceUSD+efectivoUSD) : 'USD ' + (binanceUSD+efectivoUSD).toLocaleString('es-AR');
-  document.getElementById('a-balanz').textContent = fmt(balanz, m);
-  document.getElementById('a-cocos').textContent = fmt(cocos, m);
-  document.getElementById('a-iol').textContent = fmt(iol, m);
-  document.getElementById('a-binance').textContent = 'USD ' + binanceUSD;
-  document.getElementById('a-efectivo').textContent = 'USD ' + efectivoUSD.toLocaleString('es-AR');
-  document.getElementById('a-balanz-rend').textContent = '+' + fmt(rendBalanz, m);
-  document.getElementById('a-cocos-rend').textContent = '+' + fmt(rendCocos, m);
-  document.getElementById('a-rend-total').textContent = '+' + fmt(rendTotal, m);
+  document.getElementById('a-total').textContent=fmt(total,m);
+  document.getElementById('a-pesos').textContent=fmt(totalPesos,m);
+  document.getElementById('a-usd').textContent='USD '+(143+1900).toLocaleString('es-AR');
+  document.getElementById('a-balanz').textContent=fmt(balanz,m);
+  document.getElementById('a-cocos').textContent=fmt(cocos,m);
+  document.getElementById('a-iol').textContent=fmt(iol,m);
+  document.getElementById('a-binance').textContent='USD 143';
+  document.getElementById('a-efectivo').textContent='USD 1.900';
+  document.getElementById('a-balanz-rend').textContent='+'+fmt(rendBalanz,m);
+  document.getElementById('a-cocos-rend').textContent='+'+fmt(rendCocos,m);
+  document.getElementById('a-rend-total').textContent='+'+fmt(rendTotal,m);
 
-  // Proyección 6 meses
-  let b = balanz, c = cocos;
-  for (let i = 1; i <= 6; i++) {
-    b = b * (1 + balanzTasa);
-    c = c * (1 + cocosTasa);
-    document.getElementById('proy-' + i).textContent = fmt(b + c, m);
+  let b=balanz, c=cocos;
+  for(let i=1;i<=6;i++){
+    b=b*(1+balanzTasa);
+    c=c*(1+cocosTasa);
+    const totalProy=b+c+iol+usdTotal+(ahorroMensual*i);
+    document.getElementById('proy-'+i).textContent=fmt(totalProy,m);
   }
 }
 
