@@ -62,7 +62,8 @@ def datos():
                 monto = float(str(g.get("Monto",0)).replace(",","."))
             except:
                 monto = 0
-            if cat == "Agritest":
+            cliente = g.get("Cliente", "")
+            if cliente == "Agritest":
                 agritest_total += monto
             else:
                 categorias[cat] = categorias.get(cat, 0) + monto
@@ -75,7 +76,7 @@ def datos():
         vencimientos = [dict(zip(headers_v, row)) for row in venc_raw[1:]] if len(venc_raw) > 1 else []
 
         # Gastos Agritest del mes
-        gastos_agritest = [g for g in gastos_mes if g.get("Categoria") == "Agritest"]
+        gastos_agritest = [g for g in gastos_mes if g.get("Cliente","") == "Agritest"]
 
         return jsonify({
             "ok": True,
