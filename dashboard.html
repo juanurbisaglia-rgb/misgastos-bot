@@ -160,8 +160,10 @@
     <div>
       <div class="card">
         <p class="card-title">Gastos para Agritest</p>
-        <div style="text-align:center;padding:20px 0;"><p style="font-size:13px;color:var(--text3);">Sin gastos cargados este mes</p><p style="font-size:11px;color:var(--text3);margin-top:4px;">Escribile al bot "para Agritest gasté..."</p></div>
-        <div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;" class="c-blue">$0</p></div>
+        <div id="agritest-card">
+          <div style="text-align:center;padding:20px 0;"><p style="font-size:13px;color:var(--text3);">Sin gastos cargados este mes</p><p style="font-size:11px;color:var(--text3);margin-top:4px;">Escribile al bot "para Agritest gasté..."</p></div>
+          <div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;" class="c-blue">$0</p></div>
+        </div>
       </div>
       <div class="card">
         <p class="card-title">Cuotas pendientes</p>
@@ -399,47 +401,49 @@ renderAhorros();
 </body>
 </html>
 <script>
-// Carga datos reales desde la API
 async function cargarDatosReales() {
   try {
     const res = await fetch('/api/datos');
     const d = await res.json();
-    if (!d.ok) return;
+    if (!d.ok) { console.log('API error:', d.error); return; }
 
-    // Actualizar métricas del mes
-    const moneda = monedaMes;
-    
-    // Total gastos variables reales
-    const totalVar = d.total_gastos_mes;
-    document.getElementById('m-fijos').textContent = '-' + fmt(fijosBase, moneda);
-    
-    // Agritest
-    document.getElementById('m-agritest').textContent = fmt(d.agritest_total, moneda);
+    const m = monedaMes;
 
-    // Saldo real
-    const saldoReal = sueldo + d.agritest_total - fijosBase - totalVar;
-    document.getElementById('m-saldo').textContent = fmt(saldoReal, moneda);
+    // Métricas principales
+    document.getElementById('m-agritest').textContent = fmt(d.agritest_total, m);
+    const totalGastosPersonales = d.total_gastos_mes - d.agritest_total;
+    const saldoReal = sueldo + d.agritest_total - fijosBase - totalGastosPersonales;
+    document.getElementById('m-saldo').textContent = fmt(Math.max(saldoReal, 0), m);
 
-    // Gastos Agritest
-    const agritestContainer = document.querySelector('#tab-mes .card:nth-child(1) .card');
-    if (d.gastos_agritest && d.gastos_agritest.length > 0) {
-      let html = '';
-      d.gastos_agritest.forEach(g => {
-        html += `<div class="row"><div><p class="row-label">${g.Descripcion}</p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-red">-$${parseFloat(g.Monto).toLocaleString('es-AR')}</p></div>`;
-      });
-      html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;" class="c-blue">$${d.agritest_total.toLocaleString('es-AR')}</p></div>`;
+    // Flujo: actualizar balance
+    document.getElementById('r-agritest').textContent = '+' + fmt(d.agritest_total, m);
+    document.getElementById('r-balance').textContent = '+' + fmt(Math.max(saldoReal, 0), m);
+
+    // Gastos Agritest — buscar el contenedor por id
+    const agritestCard = document.getElementById('agritest-card');
+    if (agritestCard) {
+      if (d.gastos_agritest && d.gastos_agritest.length > 0) {
+        let html = '';
+        d.gastos_agritest.forEach(g => {
+          const monto = parseFloat(g.Monto || 0);
+          html += `<div class="row"><div><p class="row-label">${g.Descripcion || 'Gasto'}</p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-red">-$${monto.toLocaleString('es-AR')}</p></div>`;
+        });
+        html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);">$${Math.round(d.agritest_total).toLocaleString('es-AR')}</p></div>`;
+        agritestCard.innerHTML = html;
+      } else {
+        agritestCard.innerHTML = `<div style="text-align:center;padding:20px 0;"><p style="font-size:13px;color:var(--text3);">Sin gastos cargados este mes</p><p style="font-size:11px;color:var(--text3);margin-top:4px;">Escribile al bot "para Agritest gasté..."</p></div><div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);">$0</p></div>`;
+      }
     }
 
     // Timestamp
     const sub = document.querySelector('.header-sub');
-    if (sub) sub.textContent = 'Actualizado: ' + d.ultimo_update;
+    if (sub) sub.textContent = 'Actualizado: ' + d.ultimo_update + ' (ARG)';
 
   } catch(e) {
-    console.log('Error cargando datos:', e);
+    console.log('Error:', e);
   }
 }
 
-// Cargar al abrir y cada 30 segundos
 cargarDatosReales();
 setInterval(cargarDatosReales, 30000);
 </script>
