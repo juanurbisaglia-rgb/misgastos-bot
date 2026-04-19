@@ -1,12 +1,14 @@
 import os
 import json
 import threading
+import requests as req
 from flask import Flask, Response, jsonify
 from google.oauth2.service_account import Credentials
 import gspread
 from datetime import datetime
 
 flask_app = Flask(__name__)
+_dolar_cache = {"valor": 1390, "fecha": ""}
 
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dashboard.html')) as f:
     DASHBOARD_HTML = f.read()
@@ -16,6 +18,21 @@ def get_sheet():
     creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
     return gc.open_by_key(os.environ["SPREADSHEET_ID"])
+
+def get_dolar_bna():
+    global _dolar_cache
+    try:
+        r = req.get("https://dolarapi.com/v1/dolares/oficial", timeout=5)
+        data = r.json()
+        _dolar_cache["valor"] = data.get("venta", 1390)
+        _dolar_cache["fecha"] = data.get("fechaActualizacion", "")[:10]
+    except:
+        pass
+    return _dolar_cache
+
+@flask_app.route('/api/dolar')
+def dolar():
+    return jsonify(get_dolar_bna())
 
 @flask_app.route('/')
 @flask_app.route('/dashboard')
@@ -40,7 +57,7 @@ def datos():
         categorias = {}
         agritest_total = 0
         for g in gastos_mes:
-            cat = g.get("Categoría", g.get("Categoria", "Otros"))
+            cat = g.get("Categoria","Otros")
             try:
                 monto = float(str(g.get("Monto",0)).replace(",","."))
             except:
@@ -58,7 +75,7 @@ def datos():
         vencimientos = [dict(zip(headers_v, row)) for row in venc_raw[1:]] if len(venc_raw) > 1 else []
 
         # Gastos Agritest del mes
-        gastos_agritest = [g for g in gastos_mes if g.get("Categoría", g.get("Categoria","")) == "Agritest"]
+        gastos_agritest = [g for g in gastos_mes if g.get("Categoria") == "Agritest"]
 
         return jsonify({
             "ok": True,
