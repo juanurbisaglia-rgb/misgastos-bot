@@ -100,7 +100,7 @@ Usa emojis para que sea mas facil de leer."""
 
         # Intentar parsear como JSON, si falla es texto directo
         try:
-            if text.startswith('{'):
+            if '{' in text:
                 if "```" in text:
                     text = text.split("```")[1]
                     if text.startswith("json"): text = text[4:]
