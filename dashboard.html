@@ -493,6 +493,16 @@ async function cargarDatosReales() {
     const sub = document.querySelector('.header-sub');
     if (sub) sub.textContent = 'Actualizado: ' + d.ultimo_update + ' (ARG)';
 
+    // Dolar BNA en tiempo real
+    try {
+      const dolarRes = await fetch('/api/dolar');
+      const dolarData = await dolarRes.json();
+      const chipVal = document.querySelector('.usd-value');
+      const chipDate = document.querySelector('.usd-date');
+      if (chipVal && dolarData.valor) chipVal.textContent = '$' + Math.round(dolarData.valor).toLocaleString('es-AR');
+      if (chipDate && dolarData.fecha) chipDate.textContent = dolarData.fecha;
+    } catch(e2) {}
+
   } catch(e) {
     console.log('Error:', e);
   }
