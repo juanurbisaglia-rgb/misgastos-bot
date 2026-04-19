@@ -1,6 +1,5 @@
 import os
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-import threading
 
 class DashboardHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -12,8 +11,9 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
 def run_server():
     port = int(os.environ.get('PORT', 8080))
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    os.chdir('/app')
     httpd = HTTPServer(('0.0.0.0', port), DashboardHandler)
+    print(f"Dashboard corriendo en puerto {port}")
     httpd.serve_forever()
 
 if __name__ == '__main__':
