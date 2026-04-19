@@ -23,8 +23,8 @@ def get_sheet():
     spreadsheet = gc.open_by_key(SPREADSHEET_ID)
     sheet_names = [s.title for s in spreadsheet.worksheets()]
     if "Gastos" not in sheet_names:
-        g = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=6)
-        g.append_row(["Fecha","Descripcion","Monto","Moneda","Categoria","Notas"])
+        g = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=7)
+        g.append_row(["Fecha","Descripcion","Monto","Moneda","Categoria","Notas","Comprobante"])
     if "Vencimientos" not in sheet_names:
         v = spreadsheet.add_worksheet(title="Vencimientos", rows=100, cols=5)
         v.append_row(["Fecha Vencimiento","Descripcion","Monto","Moneda","Estado"])
@@ -56,11 +56,11 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spreadsheet = get_sheet()
         data = get_recent_data(spreadsheet)
         gastos_mes = get_mes_actual(spreadsheet)
-
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        fecha_hoy = datetime.now().strftime("%d/%m/%Y")
 
         system_prompt = f"""Sos un asistente financiero personal amigable que habla en espanol argentino (tuteo con vos).
-Fecha: {datetime.now().strftime("%d/%m/%Y %H:%M")}
+Fecha actual: {datetime.now().strftime("%d/%m/%Y %H:%M")}
 
 DATOS ACTUALES:
 Gastos del mes actual: {json.dumps(gastos_mes, ensure_ascii=False)}
@@ -75,18 +75,20 @@ GASTOS FIJOS MENSUALES CONOCIDOS:
 - iCloud: USD 3.8 (dia 29)
 - Sueldo: $2.138.000 (principios de mes)
 
-Cuando el usuario pida un RESUMEN o consulta sobre sus finanzas, analiza los datos y responde con un resumen claro que incluya:
-- Total gastado en el mes
-- Desglose por categoria
-- Gastos para Agritest si hay
-- Proximos vencimientos importantes
-- Saldo estimado del mes
+REGLAS IMPORTANTES:
+1. Si el usuario dice "hoy" como fecha, usa: {fecha_hoy}
+2. COMPROBANTE: "ticket" o "tengo ticket" -> "Ticket fisico". "screenshot", "captura", "foto" -> "Screenshot". "factura" -> "Factura". Sin mencion -> "". NUNCA pidas numero de ticket.
+3. NO preguntes datos que el usuario ya dio. Si ya dijo fecha, categoria y comprobante, solo pedi lo que falta.
+4. Si el mensaje tiene toda la info necesaria, registralo directamente SIN hacer preguntas.
+5. Si el usuario dice "para agritest", categoria = "Agritest".
 
-Para registrar gastos o vencimientos, responde SOLO con JSON valido sin backticks:
-{{"mensaje":"respuesta amigable","accion":"gasto|vencimiento|consulta|ninguna","datos":{{"fecha":"DD/MM/YYYY","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida|Transporte|Servicios|Entretenimiento|Salud|Ropa|Ingreso|Agritest|Otros","notas":"","comprobante":"","fecha_vencimiento":"DD/MM/YYYY","estado":"Pendiente"}}}}
+Para registrar gastos o vencimientos responde SOLO con JSON valido, sin backticks ni markdown:
+{{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":""}}}}
 
-Para consultas y resumenes, responde directamente en texto natural sin JSON.
-Usa emojis para que sea mas facil de leer."""
+Valores de accion: gasto, vencimiento, consulta, ninguna
+Categorias: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Ingreso, Agritest, Otros
+Para vencimientos usar: fecha_vencimiento, descripcion, monto, moneda, estado (Pendiente)
+Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
 
         response = client.messages.create(
             model="claude-haiku-4-5-20251001",
@@ -98,12 +100,9 @@ Usa emojis para que sea mas facil de leer."""
         text = response.content[0].text.strip()
         logger.info(f"Claude response: {text[:200]}")
 
-        # Intentar parsear como JSON, si falla es texto directo
         try:
             if '{' in text:
-                if "```" in text:
-                    text = text.split("```")[1]
-                    if text.startswith("json"): text = text[4:]
+                text = text[text.index('{'):text.rindex('}')+1]
                 parsed = json.loads(text.strip())
                 accion = parsed.get("accion","ninguna")
                 datos = parsed.get("datos",{})
@@ -111,7 +110,7 @@ Usa emojis para que sea mas facil de leer."""
 
                 if accion == "gasto" and datos:
                     spreadsheet.worksheet("Gastos").append_row([
-                        datos.get("fecha", datetime.now().strftime("%d/%m/%Y")),
+                        datos.get("fecha", fecha_hoy),
                         datos.get("descripcion",""),
                         datos.get("monto",0),
                         datos.get("moneda","ARS"),
@@ -132,7 +131,6 @@ Usa emojis para que sea mas facil de leer."""
 
                 await update.message.reply_text(mensaje)
             else:
-                # Respuesta de texto directo (resumen, consulta)
                 await update.message.reply_text(text)
 
         except json.JSONDecodeError:
