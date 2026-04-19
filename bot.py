@@ -23,8 +23,8 @@ def get_sheet():
     spreadsheet = gc.open_by_key(SPREADSHEET_ID)
     sheet_names = [s.title for s in spreadsheet.worksheets()]
     if "Gastos" not in sheet_names:
-        g = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=7)
-        g.append_row(["Fecha","Descripcion","Monto","Moneda","Categoria","Notas","Comprobante"])
+        g = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=8)
+        g.append_row(["Fecha","Descripcion","Monto","Moneda","Categoria","Notas","Comprobante","Cliente"])
     if "Vencimientos" not in sheet_names:
         v = spreadsheet.add_worksheet(title="Vencimientos", rows=100, cols=5)
         v.append_row(["Fecha Vencimiento","Descripcion","Monto","Moneda","Estado"])
@@ -80,13 +80,14 @@ REGLAS IMPORTANTES:
 2. COMPROBANTE: "ticket" o "tengo ticket" -> "Ticket fisico". "screenshot", "captura", "foto" -> "Screenshot". "factura" -> "Factura". Sin mencion -> "". NUNCA pidas numero de ticket.
 3. NO preguntes datos que el usuario ya dio. Si ya dijo fecha, categoria y comprobante, solo pedi lo que falta.
 4. Si el mensaje tiene toda la info necesaria, registralo directamente SIN hacer preguntas.
-5. Si el usuario dice "para agritest", categoria = "Agritest".
+5. CLIENTE: si el usuario dice "para agritest", cliente = "Agritest". Si es gasto personal, cliente = "". La categoria SIEMPRE debe ser la real (Comida, Transporte, etc.), NUNCA "Agritest".
+6. DESCRIPCION: no incluyas "para Agritest" ni "Gasto para Agritest" en la descripcion, eso va en el campo cliente.
 
 Para registrar gastos o vencimientos responde SOLO con JSON valido, sin backticks ni markdown:
-{{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":""}}}}
+{{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":"","cliente":""}}}}
 
 Valores de accion: gasto, vencimiento, consulta, ninguna
-Categorias: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Ingreso, Agritest, Otros
+Categorias: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Ingreso, Otros
 Para vencimientos usar: fecha_vencimiento, descripcion, monto, moneda, estado (Pendiente)
 Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
 
@@ -116,7 +117,8 @@ Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
                         datos.get("moneda","ARS"),
                         datos.get("categoria","Otros"),
                         datos.get("notas",""),
-                        datos.get("comprobante","")
+                        datos.get("comprobante",""),
+                        datos.get("cliente","")
                     ])
                     logger.info("Gasto guardado!")
                 elif accion == "vencimiento" and datos:
