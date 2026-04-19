@@ -135,7 +135,8 @@ IMPORTANTE: Respondé SOLO con el JSON, sin texto adicional ni backticks."""
             if response_text.startswith("json"):
                 response_text = response_text[4:]
         
-        parsed = json.loads(response_text)
+        logger.info(f"Claude response: {response_text}")
+parsed = json.loads(response_text)
         
         mensaje = parsed.get("mensaje", "Entendido!")
         accion = parsed.get("accion", "ninguna")
