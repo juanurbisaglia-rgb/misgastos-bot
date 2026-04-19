@@ -58,7 +58,7 @@ def datos():
         vencimientos = [dict(zip(headers_v, row)) for row in venc_raw[1:]] if len(venc_raw) > 1 else []
 
         # Gastos Agritest del mes
-        gastos_agritest = [g for g in gastos_mes if g.get("Categoria") == "Agritest"]
+        gastos_agritest = [g for g in gastos_mes if g.get("Categoría", g.get("Categoria","")) == "Agritest"]
 
         return jsonify({
             "ok": True,
