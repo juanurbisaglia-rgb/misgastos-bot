@@ -83,7 +83,7 @@ Cuando el usuario pida un RESUMEN o consulta sobre sus finanzas, analiza los dat
 - Saldo estimado del mes
 
 Para registrar gastos o vencimientos, responde SOLO con JSON valido sin backticks:
-{{"mensaje":"respuesta amigable","accion":"gasto|vencimiento|consulta|ninguna","datos":{{"fecha":"DD/MM/YYYY","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida|Transporte|Servicios|Entretenimiento|Salud|Ropa|Ingreso|Agritest|Otros","notas":"","fecha_vencimiento":"DD/MM/YYYY","estado":"Pendiente"}}}}
+{{"mensaje":"respuesta amigable","accion":"gasto|vencimiento|consulta|ninguna","datos":{{"fecha":"DD/MM/YYYY","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida|Transporte|Servicios|Entretenimiento|Salud|Ropa|Ingreso|Agritest|Otros","notas":"","comprobante":"","fecha_vencimiento":"DD/MM/YYYY","estado":"Pendiente"}}}}
 
 Para consultas y resumenes, responde directamente en texto natural sin JSON.
 Usa emojis para que sea mas facil de leer."""
@@ -100,8 +100,7 @@ Usa emojis para que sea mas facil de leer."""
 
         # Intentar parsear como JSON, si falla es texto directo
         try:
-            if '{' in text:
-                text = text[text.index('{'):text.rindex('}')+1]
+            if text.startswith('{'):
                 if "```" in text:
                     text = text.split("```")[1]
                     if text.startswith("json"): text = text[4:]
@@ -117,7 +116,8 @@ Usa emojis para que sea mas facil de leer."""
                         datos.get("monto",0),
                         datos.get("moneda","ARS"),
                         datos.get("categoria","Otros"),
-                        datos.get("notas","")
+                        datos.get("notas",""),
+                        datos.get("comprobante","")
                     ])
                     logger.info("Gasto guardado!")
                 elif accion == "vencimiento" and datos:
