@@ -113,11 +113,16 @@
     <p class="header-title">Mis finanzas</p>
     <p class="header-sub" id="fecha-header">Cargando...</p>
   </div>
-  <div class="usd-chip">
-    <div class="usd-dot"></div>
-    <span class="usd-label">USD BNA vendedor</span>
-    <span class="usd-value">$1.390</span>
-    <span class="usd-date">Abr 2026</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="eye-btn" onclick="togglePrivacy()" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:40px;padding:8px 14px;cursor:pointer;font-size:13px;color:var(--text2);font-family:DM Sans,sans-serif;display:flex;align-items:center;gap:6px;">
+      <span id="eye-icon">👁</span> <span id="eye-label">Ocultar</span>
+    </button>
+    <div class="usd-chip">
+      <div class="usd-dot"></div>
+      <span class="usd-label">USD BNA vendedor</span>
+      <span class="usd-value">$1.390</span>
+      <span class="usd-date">Abr 2026</span>
+    </div>
   </div>
 </div>
 
@@ -166,7 +171,7 @@
         </div>
       </div>
       <div class="card">
-        <p class="card-title">Cuotas pendientes · Tarjeta BNA</p>
+        <p class="card-title">Cuotas pendientes</p>
         <div class="row"><div><p class="row-label">Compra 19/04</p><p class="row-sub">Cuota 1/3 · vence Mayo</p></div><p class="row-amount c-red">-$24.289</p></div>
         <div class="row"><div><p class="row-label c-dim">Cuota 2/3 · Junio</p></div><p class="row-amount c-dim">-$24.289</p></div>
         <div class="row"><div><p class="row-label c-dim">Cuota 3/3 · Julio</p></div><p class="row-amount c-dim">-$24.289</p></div>
@@ -510,4 +515,37 @@ async function cargarDatosReales() {
 
 cargarDatosReales();
 setInterval(cargarDatosReales, 30000);
+
+// Privacy mode
+let privacyOn = false;
+const MASK = '••••••';
+
+function getAllMoneyElements() {
+  return document.querySelectorAll('.metric-value, .row-amount, .venc-monto, #r-balance, .total-footer p:last-child, #proy-1, #proy-2, #proy-3, #proy-4, #proy-5, #proy-6, #a-rend-total');
+}
+
+function togglePrivacy() {
+  privacyOn = !privacyOn;
+  document.getElementById('eye-icon').textContent = privacyOn ? '🙈' : '👁';
+  document.getElementById('eye-label').textContent = privacyOn ? 'Mostrar' : 'Ocultar';
+  
+  if (privacyOn) {
+    getAllMoneyElements().forEach(el => {
+      el.dataset.original = el.textContent;
+      el.textContent = MASK;
+    });
+    // También ocultar tabla de flujo
+    document.querySelectorAll('#tabla-flujo td:not(:first-child)').forEach(td => {
+      td.dataset.original = td.textContent;
+      td.textContent = MASK;
+    });
+  } else {
+    getAllMoneyElements().forEach(el => {
+      if (el.dataset.original) el.textContent = el.dataset.original;
+    });
+    document.querySelectorAll('#tabla-flujo td:not(:first-child)').forEach(td => {
+      if (td.dataset.original) td.textContent = td.dataset.original;
+    });
+  }
+}
 </script>
