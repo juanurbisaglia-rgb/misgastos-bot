@@ -50,33 +50,34 @@ def datos():
         headers_g = gastos_raw[0] if gastos_raw else []
         gastos = [dict(zip(headers_g, row)) for row in gastos_raw[1:]] if len(gastos_raw) > 1 else []
 
-        # Gastos del mes actual
-        gastos_mes = [g for g in gastos if g.get("Fecha","").endswith(mes_actual)]
+        # Gastos personales del mes seleccionado (excluye Agritest)
+        gastos_mes = [g for g in gastos if g.get("Fecha","").endswith(mes_actual) and g.get("Cliente","") != "Agritest"]
 
-        # Total por categoria del mes
+        # Total por categoria del mes (solo personales)
         categorias = {}
-        agritest_total = 0
         for g in gastos_mes:
             cat = g.get("Categoria","Otros")
             try:
                 monto = float(str(g.get("Monto",0)).replace(",","."))
             except:
                 monto = 0
-            cliente = g.get("Cliente", "")
-            if cliente == "Agritest":
-                agritest_total += monto
-            else:
-                categorias[cat] = categorias.get(cat, 0) + monto
+            categorias[cat] = categorias.get(cat, 0) + monto
 
-        total_mes = sum(categorias.values()) + agritest_total
+        total_mes = sum(categorias.values())
+
+        # Agritest: todos los pendientes sin importar el mes
+        gastos_agritest = [g for g in gastos if g.get("Cliente","") == "Agritest" and g.get("Estado","pendiente").lower() in ("pendiente","")]
+        agritest_total = 0
+        for g in gastos_agritest:
+            try:
+                agritest_total += float(str(g.get("Monto",0)).replace(",","."))
+            except:
+                pass
 
         # Vencimientos
         venc_raw = spreadsheet.worksheet("Vencimientos").get_all_values()
         headers_v = venc_raw[0] if venc_raw else []
         vencimientos = [dict(zip(headers_v, row)) for row in venc_raw[1:]] if len(venc_raw) > 1 else []
-
-        # Gastos Agritest del mes
-        gastos_agritest = [g for g in gastos_mes if g.get("Cliente","") == "Agritest"]
 
         return jsonify({
             "ok": True,

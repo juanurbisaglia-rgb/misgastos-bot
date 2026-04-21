@@ -23,12 +23,45 @@ def get_sheet():
     spreadsheet = gc.open_by_key(SPREADSHEET_ID)
     sheet_names = [s.title for s in spreadsheet.worksheets()]
     if "Gastos" not in sheet_names:
-        g = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=8)
-        g.append_row(["Fecha","Descripcion","Monto","Moneda","Categoria","Notas","Comprobante","Cliente"])
+        g = spreadsheet.add_worksheet(title="Gastos", rows=1000, cols=9)
+        g.append_row(["Fecha","Descripcion","Monto","Moneda","Categoria","Notas","Comprobante","Cliente","Estado"])
+    else:
+        # Agregar columna Estado si no existe
+        ws = spreadsheet.worksheet("Gastos")
+        headers = ws.row_values(1)
+        if "Estado" not in headers:
+            ws.update_cell(1, len(headers)+1, "Estado")
     if "Vencimientos" not in sheet_names:
         v = spreadsheet.add_worksheet(title="Vencimientos", rows=100, cols=5)
         v.append_row(["Fecha Vencimiento","Descripcion","Monto","Moneda","Estado"])
     return spreadsheet
+
+def marcar_agritest_cobrado(spreadsheet):
+    ws = spreadsheet.worksheet("Gastos")
+    all_values = ws.get_all_values()
+    if len(all_values) <= 1:
+        return 0
+    headers = all_values[0]
+    try:
+        cliente_col = headers.index("Cliente")
+    except ValueError:
+        return 0
+    try:
+        estado_col = headers.index("Estado")
+    except ValueError:
+        estado_col = len(headers)
+        ws.update_cell(1, estado_col + 1, "Estado")
+    count = 0
+    cells = []
+    for i, row in enumerate(all_values[1:], start=2):
+        cliente = row[cliente_col] if len(row) > cliente_col else ""
+        estado = row[estado_col] if len(row) > estado_col else ""
+        if cliente == "Agritest" and estado.lower() in ("pendiente", ""):
+            cells.append(gspread.Cell(i, estado_col + 1, "cobrado"))
+            count += 1
+    if cells:
+        ws.update_cells(cells)
+    return count
 
 def get_recent_data(spreadsheet):
     try:
@@ -82,13 +115,16 @@ REGLAS IMPORTANTES:
 4. Si el mensaje tiene toda la info necesaria, registralo directamente SIN hacer preguntas.
 5. CLIENTE: si el usuario dice "para agritest", cliente = "Agritest". Si es gasto personal, cliente = "". La categoria SIEMPRE debe ser la real (Comida, Transporte, etc.), NUNCA "Agritest".
 6. DESCRIPCION: no incluyas "para Agritest" ni "Gasto para Agritest" en la descripcion, eso va en el campo cliente.
+7. ESTADO: si cliente es "Agritest", estado = "pendiente". Si es gasto personal, estado = "".
+8. COBRO AGRITEST: si el usuario dice que Agritest le pago, le deposito, cobro de Agritest, o similar → usar accion "cobro_agritest". Esto marca todos los gastos pendientes de Agritest como cobrados y reinicia el ciclo.
 
 Para registrar gastos o vencimientos responde SOLO con JSON valido, sin backticks ni markdown:
-{{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":"","cliente":""}}}}
+{{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":"","cliente":"","estado":""}}}}
 
-Valores de accion: gasto, vencimiento, consulta, ninguna
+Valores de accion: gasto, vencimiento, cobro_agritest, consulta, ninguna
 Categorias: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Ingreso, Otros
 Para vencimientos usar: fecha_vencimiento, descripcion, monto, moneda, estado (Pendiente)
+Para cobro_agritest los datos pueden ir vacios.
 Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
 
         response = client.messages.create(
@@ -118,9 +154,14 @@ Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
                         datos.get("categoria","Otros"),
                         datos.get("notas",""),
                         datos.get("comprobante",""),
-                        datos.get("cliente","")
+                        datos.get("cliente",""),
+                        datos.get("estado","")
                     ])
                     logger.info("Gasto guardado!")
+                elif accion == "cobro_agritest":
+                    count = marcar_agritest_cobrado(spreadsheet)
+                    await update.message.reply_text(f"{mensaje}\n✅ Marqué {count} gasto(s) como cobrados. El ciclo Agritest arranca de cero.")
+                    return
                 elif accion == "vencimiento" and datos:
                     spreadsheet.worksheet("Vencimientos").append_row([
                         datos.get("fecha_vencimiento",""),
