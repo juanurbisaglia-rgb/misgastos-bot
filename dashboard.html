@@ -134,7 +134,12 @@
 
 <!-- TAB: ESTE MES -->
 <div class="content active" id="tab-mes">
-  <div class="toolbar">
+  <div class="toolbar" style="justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button onclick="cambiarMes(-1)" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:40px;width:32px;height:32px;cursor:pointer;font-size:15px;color:var(--text2);display:flex;align-items:center;justify-content:center;">←</button>
+      <span id="mes-selector-label" style="font-size:13px;font-weight:500;color:var(--text);min-width:110px;text-align:center;"></span>
+      <button id="mes-next-btn" onclick="cambiarMes(1)" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:40px;width:32px;height:32px;cursor:pointer;font-size:15px;color:var(--text2);display:flex;align-items:center;justify-content:center;" disabled>→</button>
+    </div>
     <div class="toggle-group">
       <button class="toggle-btn active" onclick="setMoneda('ARS','mes',event)">ARS</button>
       <button class="toggle-btn" onclick="setMoneda('USD','mes',event)">USD</button>
@@ -266,6 +271,28 @@
 const USD = 1390;
 const ahorroMensual = 1300000;
 let monedaMes='ARS', monedaFlujo='ARS', monedaAhorros='ARS';
+let mesOffset = 0;
+
+function getMesParam() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + mesOffset);
+  return String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+
+function updateMesSelector() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + mesOffset);
+  const label = mesesNombre[d.getMonth()] + ' ' + d.getFullYear();
+  document.getElementById('mes-selector-label').textContent = label + (mesOffset === 0 ? ' ·  actual' : '');
+  document.getElementById('mes-next-btn').disabled = mesOffset >= 0;
+}
+
+function cambiarMes(delta) {
+  mesOffset += delta;
+  if (mesOffset > 0) mesOffset = 0;
+  updateMesSelector();
+  cargarDatosReales();
+}
 
 const mesesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const hoy = new Date();
@@ -414,13 +441,14 @@ function renderAhorros() {
 renderMes();
 renderFlujo();
 renderAhorros();
+updateMesSelector();
 </script>
 </body>
 </html>
 <script>
 async function cargarDatosReales() {
   try {
-    const res = await fetch('/api/datos');
+    const res = await fetch('/api/datos?mes=' + getMesParam());
     const d = await res.json();
     if (!d.ok) { console.log('API error:', d.error); return; }
 

@@ -2,7 +2,7 @@ import os
 import json
 import threading
 import requests as req
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from google.oauth2.service_account import Credentials
 import gspread
 from datetime import datetime
@@ -43,7 +43,7 @@ def dashboard():
 def datos():
     try:
         spreadsheet = get_sheet()
-        mes_actual = datetime.now().strftime("%m/%Y")
+        mes_actual = request.args.get('mes', datetime.now().strftime("%m/%Y"))
 
         # Gastos
         gastos_raw = spreadsheet.worksheet("Gastos").get_all_values()
