@@ -30,6 +30,7 @@ def get_sheet():
         ws = spreadsheet.worksheet("Gastos")
         headers = ws.row_values(1)
         if "Estado" not in headers:
+            ws.resize(rows=1000, cols=len(headers)+1)
             ws.update_cell(1, len(headers)+1, "Estado")
     if "Vencimientos" not in sheet_names:
         v = spreadsheet.add_worksheet(title="Vencimientos", rows=100, cols=5)
