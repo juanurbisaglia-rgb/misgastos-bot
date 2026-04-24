@@ -218,7 +218,7 @@
     </div>
   </div>
   <div class="table-wrap"><table id="tabla-flujo"></table></div>
-  <p style="font-size:11px;color:var(--text3);margin-top:10px;">* Proyección basada en gastos fijos conocidos. USD a $1.390 BNA vendedor. Patrimonio incluye $1.300.000 de ahorro mensual estimado.</p>
+  <p style="font-size:11px;color:var(--text3);margin-top:10px;" id="flujo-footnote">* Proyección basada en gastos fijos conocidos. Ahorro mensual estimado: calculando...</p>
 </div>
 
 <!-- TAB: AHORROS -->
@@ -342,19 +342,33 @@ function renderMes() {
   document.getElementById('r-balance').textContent='+'+fmt(balance,m);
 }
 
+const N = 9;
+const mesesCorto = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+function flujMesLabel(i) {
+  const d = new Date(hoy.getFullYear(), hoy.getMonth()+i, 1);
+  const suf = d.getFullYear() !== hoy.getFullYear() ? " '"+String(d.getFullYear()).slice(2) : '';
+  return mesesCorto[d.getMonth()] + suf;
+}
+function esAgostoIdx(i) {
+  const d = new Date(hoy.getFullYear(), hoy.getMonth()+i, 1);
+  return d.getMonth() === 7;
+}
+
+let ahorroProyectado = ahorroMensual; // se actualiza desde la API
+
 const flujoDatos = {
-  meses:['Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-  real:[true,false,false,false,false,false,false,false,false],
-  sueldo:[sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo,sueldo],
-  agritest_i:[0,0,0,0,0,0,0,0,0],
-  mono_g:[mono,mono,mono,mono,mono,mono,mono,mono,mono],
-  starlink_g:[63000,63000,63000,63000,63000,63000,63000,63000,63000],
-  ms_g:[4885,4885,4885,4885,4885,4885,4885,4885,4885],
-  claude_g:[claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD,claudeUSD],
-  icloud_g:[icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD,icloudUSD],
-  gdrive_g:[0,0,0,0,gdriveUSD,0,0,0,0],
-  tarjeta_g:[tarjeta1,tarjeta2,tarjeta3,0,0,0,0,0,0],
-  variables:[0,0,0,0,0,0,0,0,0],
+  meses: Array.from({length:N}, (_,i) => flujMesLabel(i)),
+  real: Array.from({length:N}, (_,i) => i===0),
+  sueldo: Array(N).fill(sueldo),
+  agritest_i: Array(N).fill(0),
+  mono_g: Array(N).fill(mono),
+  starlink_g: Array(N).fill(63000),
+  ms_g: Array(N).fill(4885),
+  claude_g: Array(N).fill(claudeUSD),
+  icloud_g: Array(N).fill(icloudUSD),
+  gdrive_g: Array.from({length:N}, (_,i) => esAgostoIdx(i) ? gdriveUSD : 0),
+  tarjeta_g: [tarjeta1, tarjeta2, tarjeta3, ...Array(N-3).fill(0)],
+  variables: Array(N).fill(0),
 };
 
 const balanzInicial=16859814, cocosInicial=4841975, iol=2096630;
@@ -373,7 +387,7 @@ function renderFlujo() {
   const balanzProy=[], cocosProy=[];
   for(let i=0;i<n;i++){b=b*(1+balanzTasa);c=c*(1+cocosTasa);balanzProy.push(b);cocosProy.push(c);}
 
-  const patrimonioTotal=balanzProy.map((bp,i)=>bp+cocosProy[i]+iol+usdTotal+(ahorroMensual*(i+1)));
+  const patrimonioTotal=balanzProy.map((bp,i)=>bp+cocosProy[i]+iol+usdTotal+(ahorroProyectado*(i+1)));
 
   const mesesHdr=flujoDatos.meses.map((mes,i)=>`<th>${mes} <span style="font-weight:400;color:${flujoDatos.real[i]?'var(--text2)':'var(--text3)'};">${flujoDatos.real[i]?'real':'proy'}</span></th>`).join('');
 
@@ -433,7 +447,7 @@ function renderAhorros() {
   for(let i=1;i<=6;i++){
     b=b*(1+balanzTasa);
     c=c*(1+cocosTasa);
-    const totalProy=b+c+iol+usdTotal+(ahorroMensual*i);
+    const totalProy=b+c+iol+usdTotal+(ahorroProyectado*i);
     document.getElementById('proy-'+i).textContent=fmt(totalProy,m);
   }
 }
@@ -518,9 +532,14 @@ async function cargarDatosReales() {
       }
     }
 
-    // Flujo de fondos: actualizar gastos variables
+    // Flujo de fondos: actualizar gastos variables y ahorro proyectado
     if (flujoDatos) {
       flujoDatos.variables[0] = totalPersonales;
+      if (d.gasto_promedio_mensual > 0) {
+        ahorroProyectado = Math.max(0, sueldo - fijosBase - d.gasto_promedio_mensual);
+        const fn = document.getElementById('flujo-footnote');
+        if (fn) fn.textContent = `* Proyección basada en gastos fijos + promedio histórico de gastos personales ($${Math.round(d.gasto_promedio_mensual).toLocaleString('es-AR')}/mes). Ahorro neto estimado: $${Math.round(ahorroProyectado).toLocaleString('es-AR')}/mes.`;
+      }
       renderFlujo();
     }
 

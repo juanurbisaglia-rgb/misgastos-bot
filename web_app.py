@@ -79,6 +79,27 @@ def datos():
         headers_v = venc_raw[0] if venc_raw else []
         vencimientos = [dict(zip(headers_v, row)) for row in venc_raw[1:]] if len(venc_raw) > 1 else []
 
+        # Promedio de gastos personales de meses anteriores (para proyección de ahorro)
+        monthly_personal = {}
+        for g in gastos:
+            fecha = g.get("Fecha","")
+            if not fecha or g.get("Cliente","") == "Agritest":
+                continue
+            parts = fecha.split("/")
+            if len(parts) == 3:
+                mes_key = f"{parts[1]}/{parts[2]}"
+                if mes_key == mes_actual:
+                    continue  # mes actual incompleto, no contar
+                cat = g.get("Categoria","")
+                if cat == "Ingreso":
+                    continue
+                try:
+                    monto = float(str(g.get("Monto",0)).replace(",","."))
+                    monthly_personal[mes_key] = monthly_personal.get(mes_key, 0) + monto
+                except:
+                    pass
+        gasto_promedio_mensual = round(sum(monthly_personal.values()) / len(monthly_personal)) if monthly_personal else 0
+
         return jsonify({
             "ok": True,
             "mes": datetime.now().strftime("%B %Y"),
@@ -88,6 +109,7 @@ def datos():
             "categorias": {k: round(v, 2) for k, v in categorias.items()},
             "gastos_mes": gastos_mes,
             "vencimientos": vencimientos,
+            "gasto_promedio_mensual": gasto_promedio_mensual,
             "ultimo_update": (datetime.utcnow().replace(hour=(datetime.utcnow().hour - 3) % 24)).strftime("%d/%m/%Y %H:%M")
         })
     except Exception as e:
