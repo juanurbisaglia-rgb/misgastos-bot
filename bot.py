@@ -6,10 +6,56 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 from google.oauth2.service_account import Credentials
 import gspread
-from datetime import datetime
+from datetime import datetime, timedelta, time as dtime
+from zoneinfo import ZoneInfo
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+ARG_TZ = ZoneInfo('America/Argentina/Buenos_Aires')
+CHAT_ID_FILE = '/tmp/chat_id.txt'
+
+GASTOS_FIJOS_NOTIF = [
+    {"nombre": "Microsoft",    "dia": 12, "monto": "$4.885",   "plataforma": "Mercado Pago"},
+    {"nombre": "Claude",       "dia": 15, "monto": "USD 20",   "plataforma": "Cocos Capital"},
+    {"nombre": "Monotributo",  "dia": 18, "monto": "$81.542",  "plataforma": "Mercado Pago"},
+    {"nombre": "Starlink",     "dia": 20, "monto": "$63.000",  "plataforma": "Mercado Pago"},
+    {"nombre": "Tarjeta BNA",  "dia": 20, "monto": "≈$24.289", "plataforma": "BNA Home Banking"},
+    {"nombre": "iCloud",       "dia": 29, "monto": "USD 3.8",  "plataforma": "Mercado Pago"},
+]
+
+def save_chat_id(chat_id):
+    try:
+        with open(CHAT_ID_FILE, 'w') as f:
+            f.write(str(chat_id))
+    except:
+        pass
+
+def load_chat_id():
+    try:
+        with open(CHAT_ID_FILE) as f:
+            return int(f.read().strip())
+    except:
+        return None
+
+async def daily_reminder(context):
+    chat_id = load_chat_id()
+    if not chat_id:
+        return
+    manana = datetime.now(ARG_TZ) + timedelta(days=1)
+    dia = manana.day
+    mes = manana.month
+    vencen = [g for g in GASTOS_FIJOS_NOTIF if g["dia"] == dia]
+    if mes == 8 and dia == 29:
+        vencen.append({"nombre": "Google Drive", "monto": "USD 20", "plataforma": "Cocos Capital (anual)"})
+    if not vencen:
+        return
+    msg = "🔔 *Recordatorio: mañana vence...*\n\n"
+    for g in vencen:
+        msg += f"• *{g['nombre']}*: {g['monto']}\n  💳 {g['plataforma']}\n\n"
+    msg += "¿Tenés la plata lista en la cuenta?"
+    await context.bot.send_message(chat_id=chat_id, text=msg, parse_mode='Markdown')
+    logger.info(f"Notificación enviada para día {dia}")
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
@@ -85,6 +131,7 @@ def get_mes_actual(spreadsheet):
 
 async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
+    save_chat_id(update.message.chat_id)
     await update.message.chat.send_action("typing")
     try:
         spreadsheet = get_sheet()
@@ -187,7 +234,8 @@ Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
 def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_message))
-    logger.info("Bot iniciado!")
+    app.job_queue.run_daily(daily_reminder, time=dtime(hour=9, minute=0, tzinfo=ARG_TZ))
+    logger.info("Bot iniciado con notificaciones diarias a las 9 AM ARG!")
     app.run_polling()
 
 if __name__ == "__main__":
