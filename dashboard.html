@@ -369,6 +369,7 @@ const flujoDatos = {
   gdrive_g: Array.from({length:N}, (_,i) => esAgostoIdx(i) ? gdriveUSD : 0),
   tarjeta_g: [tarjeta1, tarjeta2, tarjeta3, ...Array(N-3).fill(0)],
   variables: Array(N).fill(0),
+  variables_agritest: Array(N).fill(0),
 };
 
 const balanzInicial=16859814, cocosInicial=4841975, iol=2096630;
@@ -380,7 +381,8 @@ function renderFlujo() {
   const n=flujoDatos.meses.length;
   const totalIng=Array(n).fill(0).map((_,i)=>flujoDatos.sueldo[i]+flujoDatos.agritest_i[i]);
   const totalFij=Array(n).fill(0).map((_,i)=>flujoDatos.mono_g[i]+flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
-  const totalEgr=Array(n).fill(0).map((_,i)=>totalFij[i]+flujoDatos.variables[i]);
+  const totalVar=Array(n).fill(0).map((_,i)=>flujoDatos.variables[i]+flujoDatos.variables_agritest[i]);
+  const totalEgr=Array(n).fill(0).map((_,i)=>totalFij[i]+totalVar[i]);
   const saldoMes=Array(n).fill(0).map((_,i)=>totalIng[i]-totalEgr[i]);
 
   let b=balanzInicial, c=cocosInicial;
@@ -410,7 +412,9 @@ function renderFlujo() {
       ${row('Tarjeta BNA (cuotas)',flujoDatos.tarjeta_g,'c-red')}
       <tr class="tr-total"><td>Total fijos</td>${totalFij.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-red">${fmt(v,m)}</td>`).join('')}</tr>
       <tr class="tr-section"><td colspan="10">Gastos variables</td></tr>
-      ${row('Personales + Agritest',flujoDatos.variables,'c-red')}
+      ${row('Personales',flujoDatos.variables,'c-red')}
+      ${row('Agritest',flujoDatos.variables_agritest,'c-red')}
+      <tr class="tr-total"><td>Subtotal variables</td>${totalVar.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-red">${fmt(v,m)}</td>`).join('')}</tr>
       <tr class="tr-total"><td>Total egresos</td>${totalEgr.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-red">${fmt(v,m)}</td>`).join('')}</tr>
       <tr class="tr-saldo"><td>Saldo del mes</td>${saldoMes.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} ${v>=0?'c-green':'c-red'}">${fmt(v,m)}</td>`).join('')}</tr>
       <tr class="tr-section"><td colspan="10">Ahorros proyectados (interés compuesto + $1.300.000/mes)</td></tr>
@@ -535,6 +539,7 @@ async function cargarDatosReales() {
     // Flujo de fondos: actualizar gastos variables y ahorro proyectado
     if (flujoDatos) {
       flujoDatos.variables[0] = totalPersonales;
+      flujoDatos.variables_agritest[0] = d.agritest_total;
       if (d.gasto_promedio_mensual > 0) {
         ahorroProyectado = Math.max(0, sueldo - fijosBase - d.gasto_promedio_mensual);
         const fn = document.getElementById('flujo-footnote');
