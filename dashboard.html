@@ -97,14 +97,19 @@
   .tr-patrimonio td { font-weight: 600; font-size: 13px; background: rgba(26,122,74,0.05); border-top: 1px solid rgba(26,122,74,0.2); }
   .proy { color: var(--text3) !important; font-style: italic; }
   .total-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 12px 16px; background: var(--surface2); border-radius: var(--radius-sm); }
+  .chart-wrap { position: relative; height: 260px; }
+  .chart-wrap-lg { position: relative; height: 300px; }
   @media (max-width: 600px) {
     .grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .header { padding: 16px 16px 0; }
     .tabs { padding: 16px 16px 0; overflow-x: auto; }
     .content { padding: 16px; }
+    .chart-wrap { height: 200px; }
+    .chart-wrap-lg { height: 240px; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -194,6 +199,10 @@
       <div id="gastos-agritest-lista"><p style="font-size:13px;color:var(--text3);padding:16px 0;text-align:center;">Sin gastos cargados</p></div>
     </div>
   </div>
+  <div class="card" style="margin-bottom:10px;">
+    <p class="card-title">Distribución de gastos del mes</p>
+    <div class="chart-wrap"><canvas id="chart-gastos"></canvas></div>
+  </div>
   <div class="card">
     <p class="card-title">Vencimientos del mes</p>
     <div class="venc-grid">
@@ -219,6 +228,10 @@
   </div>
   <div class="table-wrap"><table id="tabla-flujo"></table></div>
   <p style="font-size:11px;color:var(--text3);margin-top:10px;" id="flujo-footnote">* Proyección basada en gastos fijos conocidos. Ahorro mensual estimado: calculando...</p>
+  <div class="card" style="margin-top:14px;">
+    <p class="card-title">Ingresos vs egresos por mes</p>
+    <div class="chart-wrap-lg"><canvas id="chart-flujo"></canvas></div>
+  </div>
 </div>
 
 <!-- TAB: AHORROS -->
@@ -264,6 +277,11 @@
         <p style="font-size:10px;color:var(--text3);margin-top:10px;">Incluye Balanz 35% + Cocos 30% anual + IOL fijo + USD fijo + ahorro mensual.</p>
       </div>
     </div>
+  </div>
+  <div class="card" style="margin-top:0;">
+    <p class="card-title">Proyección de patrimonio: tu estrategia vs alternativas</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:14px;">12 meses proyectados — estrategia actual, sin invertir, y todo en USD al 10% anual.</p>
+    <div class="chart-wrap-lg"><canvas id="chart-patrimonio"></canvas></div>
   </div>
 </div>
 
@@ -460,6 +478,141 @@ renderMes();
 renderFlujo();
 renderAhorros();
 updateMesSelector();
+
+// --- CHARTS ---
+let chartGastos = null, chartFlujo = null, chartPatrimonio = null;
+Chart.defaults.font.family = 'DM Sans';
+Chart.defaults.color = '#5a6a7a';
+
+function initChartGastos() {
+  const ctx = document.getElementById('chart-gastos');
+  if (!ctx) return;
+  chartGastos = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: [], datasets: [{ data: [], backgroundColor: ['#1a7a4a','#1a5fa5','#c0392b','#8a5f00','#6366f1','#0891b2','#65a30d','#d97706','#dc2626','#7c3aed'], borderWidth: 2, borderColor: 'var(--surface)', hoverOffset: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 12, padding: 14, font: { size: 12 } } },
+        tooltip: { callbacks: { label: c => ' $' + Math.round(c.parsed).toLocaleString('es-AR') } }
+      }
+    }
+  });
+}
+
+function updateChartGastos(categorias) {
+  const labels = Object.keys(categorias).filter(k => categorias[k] > 0);
+  const data = labels.map(k => categorias[k]);
+  if (!chartGastos) initChartGastos();
+  chartGastos.data.labels = labels;
+  chartGastos.data.datasets[0].data = data;
+  chartGastos.update();
+}
+
+function initChartFlujo() {
+  const ctx = document.getElementById('chart-flujo');
+  if (!ctx) return;
+  const n = flujoDatos.meses.length;
+  const ing = Array(n).fill(0).map((_,i) => flujoDatos.sueldo[i]+flujoDatos.agritest_i[i]);
+  const fij = Array(n).fill(0).map((_,i) => flujoDatos.mono_g[i]+flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
+  const varr = Array(n).fill(0).map((_,i) => flujoDatos.variables[i]+flujoDatos.variables_agritest[i]);
+  const egr = Array(n).fill(0).map((_,i) => fij[i]+varr[i]);
+  chartFlujo = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: flujoDatos.meses,
+      datasets: [
+        { label: 'Ingresos', data: ing, backgroundColor: 'rgba(26,122,74,0.75)', borderRadius: 4, borderSkipped: false },
+        { label: 'Egresos', data: egr, backgroundColor: 'rgba(192,57,43,0.65)', borderRadius: 4, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { boxWidth: 12, padding: 16, font: { size: 12 } } },
+        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': $' + Math.round(c.parsed.y).toLocaleString('es-AR') } }
+      },
+      scales: {
+        y: { ticks: { font: { family: 'DM Mono', size: 10 }, callback: v => '$' + Math.round(v/1000) + 'k' }, grid: { color: 'rgba(0,0,0,0.05)' }, border: { display: false } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+      }
+    }
+  });
+}
+
+function updateChartFlujo() {
+  if (!chartFlujo) { initChartFlujo(); return; }
+  const n = flujoDatos.meses.length;
+  const ing = Array(n).fill(0).map((_,i) => flujoDatos.sueldo[i]+flujoDatos.agritest_i[i]);
+  const fij = Array(n).fill(0).map((_,i) => flujoDatos.mono_g[i]+flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
+  const varr = Array(n).fill(0).map((_,i) => flujoDatos.variables[i]+flujoDatos.variables_agritest[i]);
+  chartFlujo.data.datasets[0].data = ing;
+  chartFlujo.data.datasets[1].data = Array(n).fill(0).map((_,i) => fij[i]+varr[i]);
+  chartFlujo.update();
+}
+
+function buildPatrimonioData() {
+  const Np = 13;
+  const months = Array.from({length:Np}, (_,i) => {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth()+i, 1);
+    return mesesCorto[d.getMonth()] + (d.getFullYear()!==hoy.getFullYear() ? " '"+String(d.getFullYear()).slice(2) : '');
+  });
+  const P0 = balanzInicial + cocosInicial + iol + usdTotal;
+  const ahorro = ahorroProyectado;
+  const P0_usd = P0/USD, ahorroUSD = ahorro/USD, usdTasa12 = 0.10/12;
+  const real=[], quieta=[], usd10=[];
+  let b=balanzInicial, c=cocosInicial;
+  real.push(P0); quieta.push(P0); usd10.push(P0);
+  for(let i=1;i<Np;i++){
+    b*=(1+balanzTasa); c*=(1+cocosTasa);
+    real.push(b+c+iol+usdTotal+ahorro*i);
+    quieta.push(P0+ahorro*i);
+    const geo = ahorroUSD*((Math.pow(1+usdTasa12,i)-1)/usdTasa12);
+    usd10.push((P0_usd*Math.pow(1+usdTasa12,i)+geo)*USD);
+  }
+  return { months, real, quieta, usd10 };
+}
+
+function initChartPatrimonio() {
+  const ctx = document.getElementById('chart-patrimonio');
+  if (!ctx) return;
+  const { months, real, quieta, usd10 } = buildPatrimonioData();
+  chartPatrimonio = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Tu estrategia', data: real, borderColor: '#1a5fa5', backgroundColor: 'rgba(26,95,165,0.07)', fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2 },
+        { label: 'Sin invertir', data: quieta, borderColor: '#8a9aaa', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, borderWidth: 2, borderDash: [5,4] },
+        { label: 'USD 10% anual', data: usd10, borderColor: '#8a5f00', backgroundColor: 'rgba(138,95,0,0.06)', fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { boxWidth: 20, padding: 16, font: { size: 12 } } },
+        tooltip: { callbacks: { label: c => ' '+c.dataset.label+': $'+(c.parsed.y/1000000).toFixed(2)+'M' } }
+      },
+      scales: {
+        y: { ticks: { font: { family: 'DM Mono', size: 10 }, callback: v => '$'+(v/1000000).toFixed(0)+'M' }, grid: { color: 'rgba(0,0,0,0.05)' }, border: { display: false } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+      }
+    }
+  });
+}
+
+function updateChartPatrimonio() {
+  if (!chartPatrimonio) { initChartPatrimonio(); return; }
+  const { real, quieta, usd10 } = buildPatrimonioData();
+  chartPatrimonio.data.datasets[0].data = real;
+  chartPatrimonio.data.datasets[1].data = quieta;
+  chartPatrimonio.data.datasets[2].data = usd10;
+  chartPatrimonio.update();
+}
+
+initChartGastos();
+initChartFlujo();
+initChartPatrimonio();
 </script>
 </body>
 </html>
@@ -546,6 +699,10 @@ async function cargarDatosReales() {
         if (fn) fn.textContent = `* Proyección basada en gastos fijos + promedio histórico de gastos personales ($${Math.round(d.gasto_promedio_mensual).toLocaleString('es-AR')}/mes). Ahorro neto estimado: $${Math.round(ahorroProyectado).toLocaleString('es-AR')}/mes.`;
       }
       renderFlujo();
+      renderAhorros();
+      updateChartFlujo();
+      updateChartPatrimonio();
+      if (d.categorias) updateChartGastos(d.categorias);
     }
 
     // Timestamp
@@ -588,11 +745,11 @@ function togglePrivacy() {
       el.dataset.original = el.textContent;
       el.textContent = MASK;
     });
-    // También ocultar tabla de flujo
     document.querySelectorAll('#tabla-flujo td:not(:first-child)').forEach(td => {
       td.dataset.original = td.textContent;
       td.textContent = MASK;
     });
+    document.querySelectorAll('canvas').forEach(c => { c.style.filter='blur(10px)'; c.style.pointerEvents='none'; });
   } else {
     getAllMoneyElements().forEach(el => {
       if (el.dataset.original) el.textContent = el.dataset.original;
@@ -600,6 +757,7 @@ function togglePrivacy() {
     document.querySelectorAll('#tabla-flujo td:not(:first-child)').forEach(td => {
       if (td.dataset.original) td.textContent = td.dataset.original;
     });
+    document.querySelectorAll('canvas').forEach(c => { c.style.filter=''; c.style.pointerEvents=''; });
   }
 }
 </script>

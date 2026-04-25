@@ -17,6 +17,9 @@ _dolar_cache = {"valor": 1390, "fecha": ""}
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dashboard.html')) as f:
     DASHBOARD_HTML = f.read()
 
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'preview.html')) as f:
+    PREVIEW_HTML = f.read()
+
 LOGIN_HTML = """<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -138,6 +141,11 @@ def get_dolar_bna():
     except:
         pass
     return _dolar_cache
+
+
+@flask_app.route('/preview')
+def preview():
+    return Response(PREVIEW_HTML, mimetype='text/html')
 
 
 @flask_app.route('/login', methods=['GET', 'POST'])
