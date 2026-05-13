@@ -327,6 +327,27 @@ def datos():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+@flask_app.route('/api/tc_debug')
+@login_required
+def tc_debug():
+    try:
+        spreadsheet = get_sheet()
+        gastos_raw = spreadsheet.worksheet("Gastos").get_all_values()
+        headers_g = gastos_raw[0] if gastos_raw else []
+        gastos = [dict(zip(headers_g, row)) for row in gastos_raw[1:]] if len(gastos_raw) > 1 else []
+        tc_gastos = [g for g in gastos if g.get("Categoria","") == "Tarjeta Credito"]
+        ahora = datetime.now()
+        tc_cuotas = parse_tc_installments(gastos, ahora)
+        return jsonify({
+            "headers": headers_g,
+            "total_gastos": len(gastos),
+            "tc_gastos_raw": tc_gastos,
+            "tc_cuotas": tc_cuotas,
+            "ahora": str(ahora.date())
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @flask_app.route('/health')
 def health():
     return 'ok'
