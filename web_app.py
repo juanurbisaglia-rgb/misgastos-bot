@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import threading
 import requests as req
@@ -125,6 +126,54 @@ def login_required(f):
     return decorated
 
 
+MES_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
+def parse_tc_installments(gastos, ahora):
+    result = []
+    for g in gastos:
+        if g.get("Categoria","") != "Tarjeta Credito":
+            continue
+        notas = g.get("Notas","")
+        fecha_str = g.get("Fecha","")
+        try:
+            n = int(re.search(r'(\d+)\s*cuotas?', notas, re.IGNORECASE).group(1)) if re.search(r'(\d+)\s*cuotas?', notas, re.IGNORECASE) else 1
+            venc_d = int(re.search(r'Venc:\s*(\d{1,2})', notas).group(1)) if re.search(r'Venc:\s*(\d{1,2})', notas) else 22
+            cierre_d = int(re.search(r'Cierre:\s*(\d{1,2})', notas).group(1)) if re.search(r'Cierre:\s*(\d{1,2})', notas) else 15
+            monto = float(str(g.get("Monto",0)).replace(",","."))
+            cuota_amt = round(monto / n, 2)
+            parts = fecha_str.split("/")
+            if len(parts) != 3:
+                continue
+            p_day, p_month, p_year = int(parts[0]), int(parts[1]), int(parts[2])
+            fm, fy = (p_month, p_year) if p_day <= cierre_d else (p_month + 1, p_year)
+            if fm > 12:
+                fm, fy = 1, fy + 1
+            for i in range(n):
+                m, y = fm + i, fy
+                while m > 12:
+                    m -= 12
+                    y += 1
+                vd = min(venc_d, 28)
+                try:
+                    due = datetime(y, m, vd)
+                except:
+                    due = datetime(y, m, 1)
+                result.append({
+                    "descripcion": g.get("Descripcion","Compra TC"),
+                    "fecha_compra": fecha_str,
+                    "cuota": i+1,
+                    "total_cuotas": n,
+                    "monto": cuota_amt,
+                    "vencimiento": f"{str(vd).zfill(2)}/{str(m).zfill(2)}/{y}",
+                    "mes_label": MES_NAMES[m-1],
+                    "pagada": due.date() < ahora.date(),
+                    "mes_actual": (m == ahora.month and y == ahora.year)
+                })
+        except:
+            continue
+    return result
+
+
 def get_sheet():
     creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
     creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
@@ -205,8 +254,10 @@ def datos():
 
         total_mes = sum(categorias.values())
 
-        # Agritest: todos los pendientes sin importar el mes
+        # Agritest: todos los pendientes sin importar el mes (para el total a cobrar)
         gastos_agritest = [g for g in gastos if g.get("Cliente","") == "Agritest" and g.get("Estado","pendiente").lower() in ("pendiente","")]
+        # Agritest: solo del mes seleccionado (para la lista inferior)
+        gastos_agritest_mes = [g for g in gastos if g.get("Fecha","").endswith(mes_actual) and g.get("Cliente","") == "Agritest"]
         agritest_total = 0
         for g in gastos_agritest:
             try:
@@ -240,16 +291,23 @@ def datos():
                     pass
         gasto_promedio_mensual = round(sum(monthly_personal.values()) / len(monthly_personal)) if monthly_personal else 0
 
+        ahora = datetime.now()
+        tc_cuotas = parse_tc_installments(gastos, ahora)
+        tc_total_mes = sum(c["monto"] for c in tc_cuotas if c.get("mes_actual") and not c.get("pagada"))
+
         return jsonify({
             "ok": True,
             "mes": datetime.now().strftime("%B %Y"),
             "total_gastos_mes": round(total_mes, 2),
             "agritest_total": round(agritest_total, 2),
             "gastos_agritest": gastos_agritest,
+            "gastos_agritest_mes": gastos_agritest_mes,
             "categorias": {k: round(v, 2) for k, v in categorias.items()},
             "gastos_mes": gastos_mes,
             "vencimientos": vencimientos,
             "gasto_promedio_mensual": gasto_promedio_mensual,
+            "tc_cuotas": [c for c in tc_cuotas if not c["pagada"]],
+            "tc_total_mes": round(tc_total_mes, 2),
             "ultimo_update": (datetime.utcnow().replace(hour=(datetime.utcnow().hour - 3) % 24)).strftime("%d/%m/%Y %H:%M")
         })
     except Exception as e:
