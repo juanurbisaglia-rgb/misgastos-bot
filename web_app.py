@@ -136,9 +136,12 @@ def parse_tc_installments(gastos, ahora):
         notas = g.get("Notas","")
         fecha_str = g.get("Fecha","")
         try:
-            n = int(re.search(r'(\d+)\s*cuotas?', notas, re.IGNORECASE).group(1)) if re.search(r'(\d+)\s*cuotas?', notas, re.IGNORECASE) else 1
-            venc_d = int(re.search(r'Venc:\s*(\d{1,2})', notas).group(1)) if re.search(r'Venc:\s*(\d{1,2})', notas) else 22
-            cierre_d = int(re.search(r'Cierre:\s*(\d{1,2})', notas).group(1)) if re.search(r'Cierre:\s*(\d{1,2})', notas) else 15
+            n_m = re.search(r'(\d+)\s*cuotas?', notas, re.IGNORECASE)
+            v_m = re.search(r'Venc:\s*(\d{1,2})', notas)
+            c_m = re.search(r'Cierre:\s*(\d{1,2})', notas)
+            n = int(n_m.group(1)) if n_m else 1
+            venc_d = int(v_m.group(1)) if v_m else 22
+            cierre_d = int(c_m.group(1)) if c_m else 15
             monto = float(str(g.get("Monto",0)).replace(",","."))
             cuota_amt = round(monto / n, 2)
             parts = fecha_str.split("/")
@@ -242,10 +245,12 @@ def datos():
         # Gastos personales del mes seleccionado (excluye Agritest)
         gastos_mes = [g for g in gastos if g.get("Fecha","").endswith(mes_actual) and g.get("Cliente","") != "Agritest"]
 
-        # Total por categoria del mes (solo personales)
+        # Total por categoria del mes (personales, excluye Tarjeta Credito — se trackea como cuotas)
         categorias = {}
         for g in gastos_mes:
             cat = g.get("Categoria","Otros")
+            if cat == "Tarjeta Credito":
+                continue
             try:
                 monto = float(str(g.get("Monto",0)).replace(",","."))
             except:
