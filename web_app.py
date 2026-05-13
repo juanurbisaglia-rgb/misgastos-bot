@@ -2,6 +2,7 @@ import os
 import re
 import json
 import threading
+import unicodedata
 import requests as req
 from flask import Flask, Response, jsonify, request, session, redirect, render_template_string
 from google.oauth2.service_account import Credentials
@@ -131,6 +132,12 @@ def login_required(f):
 
 MES_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
+def strip_accents(s):
+    return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+
+def normalize_row(headers, row):
+    return {strip_accents(k): v for k, v in zip(headers, row)}
+
 def parse_tc_installments(gastos, ahora):
     result = []
     tc_found = [g for g in gastos if g.get("Categoria","").strip().lower() == "tarjeta credito"]
@@ -246,7 +253,7 @@ def datos():
         # Gastos
         gastos_raw = spreadsheet.worksheet("Gastos").get_all_values()
         headers_g = gastos_raw[0] if gastos_raw else []
-        gastos = [dict(zip(headers_g, row)) for row in gastos_raw[1:]] if len(gastos_raw) > 1 else []
+        gastos = [normalize_row(headers_g, row) for row in gastos_raw[1:]] if len(gastos_raw) > 1 else []
 
         # Gastos personales del mes seleccionado (excluye Agritest)
         gastos_mes = [g for g in gastos if g.get("Fecha","").endswith(mes_actual) and g.get("Cliente","") != "Agritest"]
@@ -334,7 +341,7 @@ def tc_debug():
         spreadsheet = get_sheet()
         gastos_raw = spreadsheet.worksheet("Gastos").get_all_values()
         headers_g = gastos_raw[0] if gastos_raw else []
-        gastos = [dict(zip(headers_g, row)) for row in gastos_raw[1:]] if len(gastos_raw) > 1 else []
+        gastos = [normalize_row(headers_g, row) for row in gastos_raw[1:]] if len(gastos_raw) > 1 else []
         tc_gastos = [g for g in gastos if g.get("Categoria","") == "Tarjeta Credito"]
         ahora = datetime.now()
         tc_cuotas = parse_tc_installments(gastos, ahora)
