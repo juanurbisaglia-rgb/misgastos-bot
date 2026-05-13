@@ -133,8 +133,8 @@ MES_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','
 
 def parse_tc_installments(gastos, ahora):
     result = []
-    tc_found = [g for g in gastos if g.get("Categoria","") == "Tarjeta Credito"]
-    logger.info(f"TC: {len(tc_found)} gastos con categoria Tarjeta Credito")
+    tc_found = [g for g in gastos if g.get("Categoria","").strip().lower() == "tarjeta credito"]
+    logger.info(f"TC: {len(tc_found)} gastos TC de {len(gastos)} totales. Categorias encontradas: {list(set(g.get('Categoria','') for g in gastos))}")
     for g in tc_found:
         notas = g.get("Notas","")
         fecha_str = g.get("Fecha","")

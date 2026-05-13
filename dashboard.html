@@ -650,7 +650,7 @@ async function cargarDatosReales() {
         let html = '';
         agriData.forEach(g => {
           const monto = parseFloat(g.Monto || 0);
-          const desc = g.Descripcion || 'Gasto';
+          const desc = g.Descripcion || g['Descripción'] || g.descripcion || g.DESCRIPCION || Object.values(g)[1] || 'Gasto';
           html += `<div class="row"><div><p class="row-label">${desc}</p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-red">-$${monto.toLocaleString('es-AR')}</p></div>`;
         });
         html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">${labelTotal}</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);">$${Math.round(agriTotal).toLocaleString('es-AR')}</p></div>`;
