@@ -9,6 +9,9 @@ import gspread
 from datetime import datetime, timedelta
 from functools import wraps
 
+import logging
+logger = logging.getLogger(__name__)
+
 flask_app = Flask(__name__)
 flask_app.secret_key = os.environ["SECRET_KEY"]
 flask_app.permanent_session_lifetime = timedelta(days=30)
@@ -130,11 +133,12 @@ MES_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','
 
 def parse_tc_installments(gastos, ahora):
     result = []
-    for g in gastos:
-        if g.get("Categoria","") != "Tarjeta Credito":
-            continue
+    tc_found = [g for g in gastos if g.get("Categoria","") == "Tarjeta Credito"]
+    logger.info(f"TC: {len(tc_found)} gastos con categoria Tarjeta Credito")
+    for g in tc_found:
         notas = g.get("Notas","")
         fecha_str = g.get("Fecha","")
+        logger.info(f"TC gasto: fecha={fecha_str} notas={notas!r}")
         try:
             n_m = re.search(r'(\d+)\s*cuotas?', notas, re.IGNORECASE)
             v_m = re.search(r'Venc:\s*(\d{1,2})', notas)
@@ -146,6 +150,7 @@ def parse_tc_installments(gastos, ahora):
             cuota_amt = round(monto / n, 2)
             parts = fecha_str.split("/")
             if len(parts) != 3:
+                logger.warning(f"TC: fecha invalida {fecha_str}")
                 continue
             p_day, p_month, p_year = int(parts[0]), int(parts[1]), int(parts[2])
             fm, fy = (p_month, p_year) if p_day <= cierre_d else (p_month + 1, p_year)
@@ -172,8 +177,9 @@ def parse_tc_installments(gastos, ahora):
                     "pagada": due.date() < ahora.date(),
                     "mes_actual": (m == ahora.month and y == ahora.year)
                 })
-        except:
-            continue
+        except Exception as e:
+            logger.error(f"TC parse error: {e} | gasto={g}")
+    logger.info(f"TC: {len(result)} cuotas generadas, {len([c for c in result if not c['pagada']])} no pagadas")
     return result
 
 
@@ -261,8 +267,9 @@ def datos():
 
         # Agritest: todos los pendientes sin importar el mes (para el total a cobrar)
         gastos_agritest = [g for g in gastos if g.get("Cliente","") == "Agritest" and g.get("Estado","pendiente").lower() in ("pendiente","")]
-        # Agritest: solo del mes seleccionado (para la lista inferior)
+        # Agritest: solo del mes seleccionado (para la lista inferior y meses anteriores)
         gastos_agritest_mes = [g for g in gastos if g.get("Fecha","").endswith(mes_actual) and g.get("Cliente","") == "Agritest"]
+        agritest_mes_total = sum(float(str(g.get("Monto",0)).replace(",",".")) for g in gastos_agritest_mes if True)
         agritest_total = 0
         for g in gastos_agritest:
             try:
@@ -307,6 +314,8 @@ def datos():
             "agritest_total": round(agritest_total, 2),
             "gastos_agritest": gastos_agritest,
             "gastos_agritest_mes": gastos_agritest_mes,
+            "agritest_mes_total": round(agritest_mes_total, 2),
+            "es_mes_actual": mes_actual == datetime.now().strftime("%m/%Y"),
             "categorias": {k: round(v, 2) for k, v in categorias.items()},
             "gastos_mes": gastos_mes,
             "vencimientos": vencimientos,

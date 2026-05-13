@@ -639,20 +639,24 @@ async function cargarDatosReales() {
     document.getElementById('r-agritest').textContent = '+' + fmt(d.agritest_total, m);
     document.getElementById('r-balance').textContent = '+' + fmt(saldoReal, m);
 
-    // Card Agritest arriba (resumen)
+    // Card Agritest arriba: mes actual → todos los pendientes acumulados; mes anterior → solo ese mes
     const agritestCard = document.getElementById('agritest-card');
     if (agritestCard) {
-      if (d.gastos_agritest && d.gastos_agritest.length > 0) {
+      const esMesActual = d.es_mes_actual;
+      const agriData = esMesActual ? d.gastos_agritest : d.gastos_agritest_mes;
+      const agriTotal = esMesActual ? d.agritest_total : d.agritest_mes_total;
+      const labelTotal = esMesActual ? 'Total a cobrar el 20' : 'Total del mes';
+      if (agriData && agriData.length > 0) {
         let html = '';
-        d.gastos_agritest.forEach(g => {
-          const monto = parseFloat(g.Monto || g["Ítem"] || 0);
-          const desc = g["Ámbar"] || g["Descripción"] || g.Descripcion || 'Gasto';
+        agriData.forEach(g => {
+          const monto = parseFloat(g.Monto || 0);
+          const desc = g.Descripcion || 'Gasto';
           html += `<div class="row"><div><p class="row-label">${desc}</p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-red">-$${monto.toLocaleString('es-AR')}</p></div>`;
         });
-        html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);">$${Math.round(d.agritest_total).toLocaleString('es-AR')}</p></div>`;
+        html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">${labelTotal}</p><p style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);">$${Math.round(agriTotal).toLocaleString('es-AR')}</p></div>`;
         agritestCard.innerHTML = html;
       } else {
-        agritestCard.innerHTML = '<div style="text-align:center;padding:20px 0;"><p style="font-size:13px;color:var(--text3);">Sin gastos cargados este mes</p></div><div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total a cobrar el 20</p><p style="font-size:15px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue);">$0</p></div>';
+        agritestCard.innerHTML = `<div style="text-align:center;padding:20px 0;"><p style="font-size:13px;color:var(--text3);">Sin gastos Agritest</p></div><div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">${labelTotal}</p><p style="font-size:15px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue);">$0</p></div>`;
       }
     }
 
