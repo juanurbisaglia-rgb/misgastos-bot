@@ -384,7 +384,7 @@ const flujoDatos = {
   claude_g: Array(N).fill(claudeUSD),
   icloud_g: Array(N).fill(icloudUSD),
   gdrive_g: Array.from({length:N}, (_,i) => esAgostoIdx(i) ? gdriveUSD : 0),
-  tarjeta_g: [tarjeta1, tarjeta2, tarjeta3, ...Array(N-3).fill(0)],
+  tarjeta_g: Array(N).fill(0),
   variables: Array(N).fill(0),
   variables_agritest: Array(N).fill(0),
 };
@@ -696,6 +696,22 @@ async function cargarDatosReales() {
       } else {
         agriLista.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:16px 0;text-align:center;">Sin gastos Agritest este mes</p>';
       }
+    }
+
+    // Actualizar tarjeta_g en flujo de fondos desde tc_cuotas
+    flujoDatos.tarjeta_g = Array(N).fill(0);
+    if (d.tc_cuotas) {
+      const ahora = new Date();
+      d.tc_cuotas.forEach(c => {
+        const parts = c.vencimiento.split('/');
+        if (parts.length === 3) {
+          const m = parseInt(parts[1]), y = parseInt(parts[2]);
+          const idx = (y - ahora.getFullYear()) * 12 + (m - (ahora.getMonth()+1));
+          if (idx >= 0 && idx < N) flujoDatos.tarjeta_g[idx] += c.monto;
+        }
+      });
+      renderFlujo();
+      updateChartFlujo();
     }
 
     // Cuotas pendientes (dinámico desde Sheets)
