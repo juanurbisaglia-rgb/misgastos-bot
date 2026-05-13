@@ -216,7 +216,10 @@ Cuando necesites mas info antes de registrar, responde: {{"mensaje":"tu pregunta
         logger.info(f"Claude response: {text[:200]}")
 
         conversation_history.append({"role": "assistant", "content": text})
-        context.user_data["history"] = conversation_history[-10:]
+        trimmed = conversation_history[-20:]
+        while trimmed and trimmed[0]["role"] != "user":
+            trimmed = trimmed[1:]
+        context.user_data["history"] = trimmed
 
         try:
             if '{' in text:
