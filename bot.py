@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 ARG_TZ = ZoneInfo('America/Argentina/Buenos_Aires')
 CHAT_ID_FILE = '/tmp/chat_id.txt'
+TC_CONFIG_FILE = '/tmp/tc_config.json'
 
 GASTOS_FIJOS_NOTIF = [
     {"nombre": "Microsoft",    "dia": 12, "monto": "$4.885",   "plataforma": "Mercado Pago"},
@@ -35,6 +36,23 @@ def load_chat_id():
     try:
         with open(CHAT_ID_FILE) as f:
             return int(f.read().strip())
+    except:
+        return None
+
+def save_tc_config(cierre_dia, venc_dia):
+    try:
+        with open(TC_CONFIG_FILE, 'w') as f:
+            json.dump({"cierre_dia": cierre_dia, "venc_dia": venc_dia, "mes": datetime.now(ARG_TZ).strftime("%m/%Y")}, f)
+    except:
+        pass
+
+def load_tc_config():
+    try:
+        with open(TC_CONFIG_FILE) as f:
+            data = json.load(f)
+        if data.get("mes") != datetime.now(ARG_TZ).strftime("%m/%Y"):
+            return None
+        return data
     except:
         return None
 
@@ -133,6 +151,10 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     save_chat_id(update.message.chat_id)
     await update.message.chat.send_action("typing")
+
+    conversation_history = context.user_data.get("history", [])
+    conversation_history.append({"role": "user", "content": user_message})
+
     try:
         spreadsheet = get_sheet()
         data = get_recent_data(spreadsheet)
@@ -157,7 +179,7 @@ GASTOS FIJOS MENSUALES CONOCIDOS:
 - Sueldo: $2.138.000 (principios de mes)
 
 REGLAS IMPORTANTES:
-1. Si el usuario dice "hoy" como fecha, usa: {fecha_hoy}
+1. FECHAS RELATIVAS: "hoy" = {fecha_hoy}. "ayer" = {(datetime.now(ARG_TZ) - timedelta(days=1)).strftime("%d/%m/%Y")}. "antes de ayer" o "anteayer" = {(datetime.now(ARG_TZ) - timedelta(days=2)).strftime("%d/%m/%Y")}. Usa siempre la fecha calculada, no texto relativo.
 2. COMPROBANTE: "ticket" o "tengo ticket" -> "Ticket fisico". "screenshot", "captura", "foto" -> "Screenshot". "factura" -> "Factura". Sin mencion -> "". NUNCA pidas numero de ticket.
 3. NO preguntes datos que el usuario ya dio. Si ya dijo fecha, categoria y comprobante, solo pedi lo que falta.
 4. Si el mensaje tiene toda la info necesaria, registralo directamente SIN hacer preguntas.
@@ -165,25 +187,36 @@ REGLAS IMPORTANTES:
 6. DESCRIPCION: no incluyas "para Agritest" ni "Gasto para Agritest" en la descripcion, eso va en el campo cliente.
 7. ESTADO: si cliente es "Agritest", estado = "pendiente". Si es gasto personal, estado = "".
 8. COBRO AGRITEST: si el usuario dice que Agritest le pago, le deposito, cobro de Agritest, o similar → usar accion "cobro_agritest". Esto marca todos los gastos pendientes de Agritest como cobrados y reinicia el ciclo.
+9. TARJETA DE CREDITO: si el usuario menciona "tarjeta de credito", "tarjeta", "TC", "cuotas" o similar:
+   - categoria = "Tarjeta Credito"
+   - {f"Tarjeta ya configurada: cierre dia {load_tc_config()['cierre_dia']}, vencimiento dia {load_tc_config()['venc_dia']}. NO preguntes estos datos, ya los tenes guardados. Solo usarlos en notas." if load_tc_config() else "Cierre y vencimiento NO configurados aun: si el usuario no los menciona, hace UNA SOLA pregunta pidiendo cantidad de cuotas, dia de cierre y dia de vencimiento."}
+   - En notas guardar: "X cuotas | Cierre: DD/MM | Venc: DD/MM"
+   - Si el usuario da solo el dia sin mes, usar el mes actual o el siguiente segun corresponda.
+   - En el JSON incluir siempre: tc_cierre_dia (numero del dia) y tc_venc_dia (numero del dia) para guardarlos.
+10. CONTEXTO: tenes memoria de la conversacion actual. Si en un mensaje anterior hiciste una pregunta, usa la respuesta del usuario para completar ese registro. No pierdas el hilo.
 
 Para registrar gastos o vencimientos responde SOLO con JSON valido, sin backticks ni markdown:
 {{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":"","cliente":"","estado":""}}}}
 
 Valores de accion: gasto, vencimiento, cobro_agritest, consulta, ninguna
-Categorias: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Ingreso, Otros
+Categorias: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Tarjeta Credito, Ingreso, Otros
 Para vencimientos usar: fecha_vencimiento, descripcion, monto, moneda, estado (Pendiente)
 Para cobro_agritest los datos pueden ir vacios.
-Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
+Para consultas y resumenes responde en texto natural con emojis, sin JSON.
+Cuando necesites mas info antes de registrar, responde: {{"mensaje":"tu pregunta","accion":"ninguna","datos":{{}}}}"""
 
         response = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=1000,
             system=system_prompt,
-            messages=[{"role": "user", "content": user_message}]
+            messages=conversation_history
         )
 
         text = response.content[0].text.strip()
         logger.info(f"Claude response: {text[:200]}")
+
+        conversation_history.append({"role": "assistant", "content": text})
+        context.user_data["history"] = conversation_history[-10:]
 
         try:
             if '{' in text:
@@ -205,10 +238,15 @@ Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
                         datos.get("cliente",""),
                         datos.get("estado","")
                     ])
+                    if datos.get("tc_cierre_dia") and datos.get("tc_venc_dia"):
+                        save_tc_config(datos["tc_cierre_dia"], datos["tc_venc_dia"])
+                        logger.info(f"TC config guardada: cierre {datos['tc_cierre_dia']}, venc {datos['tc_venc_dia']}")
                     logger.info("Gasto guardado!")
+                    context.user_data["history"] = []
                 elif accion == "cobro_agritest":
                     count = marcar_agritest_cobrado(spreadsheet)
                     await update.message.reply_text(f"{mensaje}\n✅ Marqué {count} gasto(s) como cobrados. El ciclo Agritest arranca de cero.")
+                    context.user_data["history"] = []
                     return
                 elif accion == "vencimiento" and datos:
                     spreadsheet.worksheet("Vencimientos").append_row([
@@ -219,6 +257,7 @@ Para consultas y resumenes responde en texto natural con emojis, sin JSON."""
                         datos.get("estado","Pendiente")
                     ])
                     logger.info("Vencimiento guardado!")
+                    context.user_data["history"] = []
 
                 await update.message.reply_text(mensaje)
             else:
