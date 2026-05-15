@@ -145,24 +145,29 @@ def parse_tc_installments(gastos, ahora):
     for g in tc_found:
         notas = g.get("Notas","")
         fecha_str = g.get("Fecha","")
-        logger.info(f"TC gasto: fecha={fecha_str} notas={notas!r}")
         try:
             n_m = re.search(r'(\d+)\s*cuotas?', notas, re.IGNORECASE)
-            v_m = re.search(r'Venc:\s*(\d{1,2})', notas)
-            c_m = re.search(r'Cierre:\s*(\d{1,2})', notas)
+            v_m = re.search(r'Venc:\s*(\d{1,2})/(\d{1,2})', notas)
             n = int(n_m.group(1)) if n_m else 1
-            venc_d = int(v_m.group(1)) if v_m else 22
-            cierre_d = int(c_m.group(1)) if c_m else 15
             monto = float(str(g.get("Monto",0)).replace(",","."))
             cuota_amt = round(monto / n, 2)
             parts = fecha_str.split("/")
             if len(parts) != 3:
-                logger.warning(f"TC: fecha invalida {fecha_str}")
                 continue
-            p_day, p_month, p_year = int(parts[0]), int(parts[1]), int(parts[2])
-            fm, fy = (p_month, p_year) if p_day <= cierre_d else (p_month + 1, p_year)
-            if fm > 12:
-                fm, fy = 1, fy + 1
+            p_month, p_year = int(parts[1]), int(parts[2])
+
+            if v_m:
+                # Parsear día Y mes completo del vencimiento: "Venc: 24/06"
+                venc_d, venc_mes = int(v_m.group(1)), int(v_m.group(2))
+                # Si el mes del venc es menor al mes de compra, es el año siguiente
+                venc_year = p_year if venc_mes >= p_month else p_year + 1
+                fm, fy = venc_mes, venc_year
+            else:
+                # Fallback sin fecha completa en notas
+                venc_d, fm, fy = 22, p_month + 1, p_year
+                if fm > 12:
+                    fm, fy = 1, fy + 1
+
             for i in range(n):
                 m, y = fm + i, fy
                 while m > 12:
