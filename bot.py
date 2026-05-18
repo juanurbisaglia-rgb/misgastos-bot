@@ -171,7 +171,7 @@ Ultimos gastos (hasta 50): {json.dumps(data['gastos_recientes'], ensure_ascii=Fa
 Vencimientos: {json.dumps(data['vencimientos'], ensure_ascii=False)}
 
 GASTOS FIJOS MENSUALES CONOCIDOS:
-- Monotributo: $81.542 (dia 18)
+- Monotributo: $81.542 (dia 18) → lo paga Agritest, siempre registrar con cliente="Agritest"
 - Starlink: $63.000 (dia 20)
 - Microsoft: $4.885 (dia 12)
 - Claude: USD 20 (dia 15)
@@ -194,6 +194,7 @@ REGLAS IMPORTANTES:
    - Si el usuario da solo el dia sin mes, usar el mes actual o el siguiente segun corresponda.
    - En el JSON incluir siempre: tc_cierre_dia (numero del dia) y tc_venc_dia (numero del dia) para guardarlos.
 10. CONTEXTO: tenes memoria de la conversacion actual. Si en un mensaje anterior hiciste una pregunta, usa la respuesta del usuario para completar ese registro. No pierdas el hilo.
+11. MONOTRIBUTO: si el usuario menciona "monotributo", registrarlo SIEMPRE con cliente="Agritest" y estado="pendiente", aunque no lo aclare. Es un gasto que paga Agritest.
 
 Para registrar gastos o vencimientos responde SOLO con JSON valido, sin backticks ni markdown:
 {{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":"","cliente":"","estado":""}}}}

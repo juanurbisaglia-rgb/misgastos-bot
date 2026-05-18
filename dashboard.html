@@ -161,7 +161,6 @@
       <p class="card-title">Flujo del mes</p>
       <div class="row"><div><p class="row-label c-green">Sueldo</p><p class="row-sub">Principios de mes · BNA</p></div><p class="row-amount c-green" id="r-sueldo">+$2.138.000</p></div>
       <div class="row"><div><p class="row-label c-green">Reembolso Agritest</p><p class="row-sub">Día 20</p></div><p class="row-amount c-green" id="r-agritest">+$0</p></div>
-      <div class="row"><div><p class="row-label">Monotributo</p><p class="row-sub">Día 18 · Mercado Pago</p></div><p class="row-amount c-red" id="r-mono">-$81.542</p></div>
       <div class="row"><div><p class="row-label">Starlink</p><p class="row-sub">Día 20 · Mercado Pago</p></div><p class="row-amount c-red" id="r-starlink">-$63.000</p></div>
       <div class="row"><div><p class="row-label">Microsoft</p><p class="row-sub">Día 12 · Mercado Pago</p></div><p class="row-amount c-red" id="r-microsoft">-$4.885</p></div>
       <div class="row"><div><p class="row-label">Claude <span class="cuota-pill">USD 20</span></p><p class="row-sub">Día 15 · Cocos</p></div><p class="row-amount c-red" id="r-claude">-$27.800</p></div>
@@ -335,10 +334,10 @@ function setMoneda(m, tab, e) {
   if (tab==='ahorros') { monedaAhorros=m; renderAhorros(); }
 }
 
-const sueldo=2138000, mono=81541.85, starlink=63000, microsoft=4885;
+const sueldo=2138000, starlink=63000, microsoft=4885;
 const claudeUSD=20*USD, icloudUSD=3.8*USD, gdriveUSD=20*USD;
 let tarjetaMes=0;
-let fijosBase=mono+starlink+microsoft+claudeUSD+icloudUSD+tarjetaMes;
+let fijosBase=starlink+microsoft+claudeUSD+icloudUSD+tarjetaMes;
 let balance=sueldo-fijosBase;
 
 function renderMes() {
@@ -347,7 +346,6 @@ function renderMes() {
   document.getElementById('m-fijos').textContent='-'+fmt(fijosBase,m);
   document.getElementById('m-saldo').textContent=fmt(balance,m);
   document.getElementById('r-sueldo').textContent='+'+fmt(sueldo,m);
-  document.getElementById('r-mono').textContent='-'+fmt(mono,m);
   document.getElementById('r-starlink').textContent='-'+fmt(starlink,m);
   document.getElementById('r-microsoft').textContent='-'+fmt(microsoft,m);
   document.getElementById('r-claude').textContent='-'+fmt(claudeUSD,m);
@@ -378,7 +376,6 @@ const flujoDatos = {
   real: Array.from({length:N}, (_,i) => i===0),
   sueldo: Array(N).fill(sueldo),
   agritest_i: Array(N).fill(0),
-  mono_g: Array(N).fill(mono),
   starlink_g: Array(N).fill(63000),
   ms_g: Array(N).fill(4885),
   claude_g: Array(N).fill(claudeUSD),
@@ -397,7 +394,7 @@ function renderFlujo() {
   const m=monedaFlujo;
   const n=flujoDatos.meses.length;
   const totalIng=Array(n).fill(0).map((_,i)=>flujoDatos.sueldo[i]+flujoDatos.agritest_i[i]);
-  const totalFij=Array(n).fill(0).map((_,i)=>flujoDatos.mono_g[i]+flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
+  const totalFij=Array(n).fill(0).map((_,i)=>flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
   const totalVar=Array(n).fill(0).map((_,i)=>flujoDatos.variables[i]+flujoDatos.variables_agritest[i]);
   const totalEgr=Array(n).fill(0).map((_,i)=>totalFij[i]+totalVar[i]);
   const saldoMes=Array(n).fill(0).map((_,i)=>totalIng[i]-totalEgr[i]);
@@ -420,7 +417,6 @@ function renderFlujo() {
       ${row('Reembolso Agritest',flujoDatos.agritest_i,'c-green')}
       <tr class="tr-total"><td>Total ingresos</td>${totalIng.map((v,i)=>`<td class="${flujoDatos.real[i]?'':'proy'} c-green">${fmt(v,m)}</td>`).join('')}</tr>
       <tr class="tr-section"><td colspan="10">Gastos fijos</td></tr>
-      ${row('Monotributo',flujoDatos.mono_g,'c-red')}
       ${row('Starlink',flujoDatos.starlink_g,'c-red')}
       ${row('Microsoft',flujoDatos.ms_g,'c-red')}
       ${row('Claude (USD 20)',flujoDatos.claude_g,'c-red')}
@@ -513,7 +509,7 @@ function initChartFlujo() {
   if (!ctx) return;
   const n = flujoDatos.meses.length;
   const ing = Array(n).fill(0).map((_,i) => flujoDatos.sueldo[i]+flujoDatos.agritest_i[i]);
-  const fij = Array(n).fill(0).map((_,i) => flujoDatos.mono_g[i]+flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
+  const fij = Array(n).fill(0).map((_,i) => flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
   const varr = Array(n).fill(0).map((_,i) => flujoDatos.variables[i]+flujoDatos.variables_agritest[i]);
   const egr = Array(n).fill(0).map((_,i) => fij[i]+varr[i]);
   chartFlujo = new Chart(ctx, {
@@ -543,7 +539,7 @@ function updateChartFlujo() {
   if (!chartFlujo) { initChartFlujo(); return; }
   const n = flujoDatos.meses.length;
   const ing = Array(n).fill(0).map((_,i) => flujoDatos.sueldo[i]+flujoDatos.agritest_i[i]);
-  const fij = Array(n).fill(0).map((_,i) => flujoDatos.mono_g[i]+flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
+  const fij = Array(n).fill(0).map((_,i) => flujoDatos.starlink_g[i]+flujoDatos.ms_g[i]+flujoDatos.claude_g[i]+flujoDatos.icloud_g[i]+flujoDatos.gdrive_g[i]+flujoDatos.tarjeta_g[i]);
   const varr = Array(n).fill(0).map((_,i) => flujoDatos.variables[i]+flujoDatos.variables_agritest[i]);
   chartFlujo.data.datasets[0].data = ing;
   chartFlujo.data.datasets[1].data = Array(n).fill(0).map((_,i) => fij[i]+varr[i]);
@@ -626,7 +622,7 @@ async function cargarDatosReales() {
 
     // Actualizar tarjeta y recalcular fijos/balance con datos reales
     tarjetaMes = d.tc_total_mes || 0;
-    fijosBase = mono + starlink + microsoft + claudeUSD + icloudUSD + tarjetaMes;
+    fijosBase = starlink + microsoft + claudeUSD + icloudUSD + tarjetaMes;
     const totalPersonales = d.total_gastos_mes;
     const saldoReal = sueldo + d.agritest_total - fijosBase - totalPersonales;
     balance = saldoReal;
