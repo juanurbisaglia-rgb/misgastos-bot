@@ -684,14 +684,27 @@ async function cargarDatosReales() {
       const agriMes = d.gastos_agritest_mes || [];
       if (agriMes.length > 0) {
         let html = '';
-        let totalMes = 0;
+        let totalCobrado = 0;
+        let totalPendiente = 0;
         agriMes.forEach(g => {
           const monto = parseFloat(g.Monto || 0);
-          totalMes += monto;
-          const desc = g["Descripción"] || g.Descripcion || 'Gasto';
-          html += `<div class="row"><div><p class="row-label">${desc}</p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-red">-$${monto.toLocaleString('es-AR')}</p></div>`;
+          const desc = g.Descripcion || 'Gasto';
+          const cobrado = (g.Estado || '').toLowerCase() === 'cobrado';
+          if (cobrado) {
+            totalCobrado += monto;
+            html += `<div class="row"><div><p class="row-label c-dim">${desc} <span class="badge badge-green" style="margin-left:4px;">Cobrado</span></p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-dim">$${monto.toLocaleString('es-AR')}</p></div>`;
+          } else {
+            totalPendiente += monto;
+            html += `<div class="row"><div><p class="row-label">${desc}</p><p class="row-sub">${g.Fecha}</p></div><p class="row-amount c-red">-$${monto.toLocaleString('es-AR')}</p></div>`;
+          }
         });
-        html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total del mes</p><p style="font-size:15px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue);">$${Math.round(totalMes).toLocaleString('es-AR')}</p></div>`;
+        if (totalPendiente > 0 && totalCobrado > 0) {
+          html += `<div class="total-footer" style="flex-direction:column;align-items:flex-start;gap:4px;"><p style="font-size:12px;color:var(--text3);">Cobrado: <span style="font-family:DM Mono,monospace;font-weight:500;color:var(--green);">$${Math.round(totalCobrado).toLocaleString('es-AR')}</span></p><p style="font-size:12px;color:var(--text3);">Nuevo ciclo: <span style="font-family:DM Mono,monospace;font-weight:500;color:var(--red);">-$${Math.round(totalPendiente).toLocaleString('es-AR')}</span></p></div>`;
+        } else if (totalCobrado > 0) {
+          html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total cobrado</p><p style="font-size:15px;font-weight:600;font-family:DM Mono,monospace;color:var(--green);">$${Math.round(totalCobrado).toLocaleString('es-AR')}</p></div>`;
+        } else {
+          html += `<div class="total-footer"><p style="font-size:13px;color:var(--text2);font-weight:500;">Total del mes</p><p style="font-size:15px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue);">$${Math.round(totalPendiente).toLocaleString('es-AR')}</p></div>`;
+        }
         agriLista.innerHTML = html;
       } else {
         agriLista.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:16px 0;text-align:center;">Sin gastos Agritest este mes</p>';
