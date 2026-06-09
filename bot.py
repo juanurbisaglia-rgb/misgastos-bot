@@ -175,10 +175,13 @@ def get_recent_data(spreadsheet):
     try:
         gastos = spreadsheet.worksheet("Gastos").get_all_values()
         venc = spreadsheet.worksheet("Vencimientos").get_all_values()
-        return {"gastos_recientes": gastos[-50:] if len(gastos)>1 else [], "vencimientos": venc}
+        all_gastos = gastos[1:] if len(gastos) > 1 else []
+        recientes = all_gastos[-50:]
+        etiquetados = [g for g in all_gastos if len(g) > 5 and '#' in g[5]]
+        return {"gastos_recientes": recientes, "gastos_etiquetados": etiquetados, "vencimientos": venc}
     except Exception as e:
         logger.error(f"Sheets error: {e}")
-        return {"gastos_recientes":[], "vencimientos":[]}
+        return {"gastos_recientes": [], "gastos_etiquetados": [], "vencimientos": []}
 
 def get_mes_actual(spreadsheet):
     try:
@@ -213,6 +216,7 @@ Fecha actual: {datetime.now().strftime("%d/%m/%Y %H:%M")}
 DATOS ACTUALES:
 Gastos del mes actual: {json.dumps(gastos_mes, ensure_ascii=False)}
 Ultimos gastos (hasta 50): {json.dumps(data['gastos_recientes'], ensure_ascii=False)}
+Gastos con etiqueta de proyecto (TODOS, sin limite): {json.dumps(data['gastos_etiquetados'], ensure_ascii=False)}
 Vencimientos: {json.dumps(data['vencimientos'], ensure_ascii=False)}
 
 GASTOS FIJOS MENSUALES CONOCIDOS:
