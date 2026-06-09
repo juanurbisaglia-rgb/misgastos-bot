@@ -334,7 +334,8 @@ function setMoneda(m, tab, e) {
   if (tab==='ahorros') { monedaAhorros=m; renderAhorros(); }
 }
 
-const sueldo=2138000, starlink=63000, microsoft=4885;
+let sueldo=2138000;
+const starlink=63000, microsoft=4885;
 const claudeUSD=20*USD, icloudUSD=3.8*USD, gdriveUSD=20*USD;
 let tarjetaMes=0;
 let fijosBase=starlink+microsoft+claudeUSD+icloudUSD+tarjetaMes;
@@ -619,6 +620,12 @@ async function cargarDatosReales() {
     if (!d.ok) { console.log('API error:', d.error); return; }
 
     const m = monedaMes;
+
+    // Actualizar sueldo si cambió
+    if (d.sueldo) {
+      sueldo = d.sueldo;
+      flujoDatos.sueldo = Array(N).fill(sueldo);
+    }
 
     // Actualizar tarjeta y recalcular fijos/balance con datos reales
     tarjetaMes = d.tc_total_mes || 0;

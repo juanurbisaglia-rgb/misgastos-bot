@@ -99,6 +99,10 @@ def get_sheet():
     if "Vencimientos" not in sheet_names:
         v = spreadsheet.add_worksheet(title="Vencimientos", rows=100, cols=5)
         v.append_row(["Fecha Vencimiento","Descripcion","Monto","Moneda","Estado"])
+    if "Config" not in sheet_names:
+        c = spreadsheet.add_worksheet(title="Config", rows=20, cols=2)
+        c.append_row(["clave", "valor"])
+        c.append_row(["sueldo", "2138000"])
     return spreadsheet
 
 def marcar_agritest_cobrado(spreadsheet):
@@ -127,6 +131,27 @@ def marcar_agritest_cobrado(spreadsheet):
     if cells:
         ws.update_cells(cells)
     return count
+
+def actualizar_config(spreadsheet, clave, valor):
+    try:
+        ws = spreadsheet.worksheet("Config")
+        all_values = ws.get_all_values()
+        for i, row in enumerate(all_values[1:], start=2):
+            if row and row[0] == clave:
+                ws.update_cell(i, 2, str(valor))
+                return True
+        ws.append_row([clave, str(valor)])
+        return True
+    except Exception as e:
+        logger.error(f"Config update error: {e}")
+        return False
+
+def get_config(spreadsheet):
+    try:
+        config_raw = spreadsheet.worksheet("Config").get_all_values()
+        return {row[0]: row[1] for row in config_raw[1:] if len(row) >= 2}
+    except:
+        return {}
 
 def get_recent_data(spreadsheet):
     try:
@@ -159,6 +184,8 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spreadsheet = get_sheet()
         data = get_recent_data(spreadsheet)
         gastos_mes = get_mes_actual(spreadsheet)
+        config = get_config(spreadsheet)
+        sueldo_actual = config.get("sueldo", "2138000")
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
 
@@ -176,7 +203,7 @@ GASTOS FIJOS MENSUALES CONOCIDOS:
 - Microsoft: $4.885 (dia 12)
 - Claude: USD 20 (dia 15)
 - iCloud: USD 3.8 (dia 29)
-- Sueldo: $2.138.000 (principios de mes)
+- Sueldo: ${sueldo_actual} (principios de mes)
 
 REGLAS IMPORTANTES:
 1. FECHAS RELATIVAS: "hoy" = {fecha_hoy}. "ayer" = {(datetime.now(ARG_TZ) - timedelta(days=1)).strftime("%d/%m/%Y")}. "antes de ayer" o "anteayer" = {(datetime.now(ARG_TZ) - timedelta(days=2)).strftime("%d/%m/%Y")}. Usa siempre la fecha calculada, no texto relativo.
@@ -187,6 +214,7 @@ REGLAS IMPORTANTES:
 6. DESCRIPCION: no incluyas "para Agritest" ni "Gasto para Agritest" en la descripcion, eso va en el campo cliente.
 7. ESTADO: si cliente es "Agritest", estado = "pendiente". Si es gasto personal, estado = "".
 8. COBRO AGRITEST: si el usuario dice que Agritest le pago, le deposito, cobro de Agritest, o similar → usar accion "cobro_agritest". Esto marca todos los gastos pendientes de Agritest como cobrados y reinicia el ciclo.
+12. SUELDO: si el usuario dice que le aumentaron o cambiaron el sueldo a $X → accion "actualizar_config" con datos {{"clave":"sueldo","valor":MONTO_NUMERICO_SIN_PUNTOS_NI_SIMBOLOS}}.
 9. TARJETA DE CREDITO: si el usuario menciona "tarjeta de credito", "tarjeta", "TC", "cuotas" o similar:
    - categoria = "Tarjeta Credito"
    - {f"Tarjeta ya configurada: cierre dia {load_tc_config()['cierre_dia']}, vencimiento dia {load_tc_config()['venc_dia']}. NO preguntes estos datos, ya los tenes guardados. Solo usarlos en notas." if load_tc_config() else "Cierre y vencimiento NO configurados aun: si el usuario no los menciona, hace UNA SOLA pregunta pidiendo cantidad de cuotas, dia de cierre y dia de vencimiento."}
@@ -199,7 +227,7 @@ REGLAS IMPORTANTES:
 Para registrar gastos o vencimientos responde SOLO con JSON valido, sin backticks ni markdown:
 {{"mensaje":"respuesta corta y amigable","accion":"gasto","datos":{{"fecha":"{fecha_hoy}","descripcion":"","monto":0,"moneda":"ARS","categoria":"Comida","notas":"","comprobante":"","cliente":"","estado":""}}}}
 
-Valores de accion: gasto, vencimiento, cobro_agritest, consulta, ninguna
+Valores de accion: gasto, vencimiento, cobro_agritest, actualizar_config, consulta, ninguna
 Categorias: Comida, Transporte, Servicios, Entretenimiento, Salud, Ropa, Tarjeta Credito, Ingreso, Otros
 Para vencimientos usar: fecha_vencimiento, descripcion, monto, moneda, estado (Pendiente)
 Para cobro_agritest los datos pueden ir vacios.
@@ -247,6 +275,17 @@ Cuando necesites mas info antes de registrar, responde: {{"mensaje":"tu pregunta
                         logger.info(f"TC config guardada: cierre {datos['tc_cierre_dia']}, venc {datos['tc_venc_dia']}")
                     logger.info("Gasto guardado!")
                     context.user_data["history"] = []
+                elif accion == "actualizar_config":
+                    clave = datos.get("clave", "")
+                    valor = datos.get("valor", 0)
+                    if clave and valor:
+                        ok = actualizar_config(spreadsheet, clave, valor)
+                        if ok:
+                            await update.message.reply_text(f"{mensaje}\n✅ {clave.capitalize()} actualizado a ${int(float(str(valor))):,}".replace(",","."))
+                        else:
+                            await update.message.reply_text("No pude actualizar la configuración.")
+                        context.user_data["history"] = []
+                        return
                 elif accion == "cobro_agritest":
                     count = marcar_agritest_cobrado(spreadsheet)
                     await update.message.reply_text(f"{mensaje}\n✅ Marqué {count} gasto(s) como cobrados. El ciclo Agritest arranca de cero.")

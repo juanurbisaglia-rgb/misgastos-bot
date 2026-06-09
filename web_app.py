@@ -255,6 +255,15 @@ def datos():
         spreadsheet = get_sheet()
         mes_actual = request.args.get('mes', datetime.now().strftime("%m/%Y"))
 
+        # Config
+        sueldo = 2138000
+        try:
+            config_raw = spreadsheet.worksheet("Config").get_all_values()
+            config = {row[0]: row[1] for row in config_raw[1:] if len(row) >= 2}
+            sueldo = int(float(config.get("sueldo", "2138000").replace(",", ".")))
+        except:
+            pass
+
         # Gastos
         gastos_raw = spreadsheet.worksheet("Gastos").get_all_values()
         headers_g = gastos_raw[0] if gastos_raw else []
@@ -322,6 +331,7 @@ def datos():
         return jsonify({
             "ok": True,
             "mes": datetime.now().strftime("%B %Y"),
+            "sueldo": sueldo,
             "total_gastos_mes": round(total_mes, 2),
             "agritest_total": round(agritest_total, 2),
             "gastos_agritest": gastos_agritest,
