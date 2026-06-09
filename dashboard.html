@@ -161,6 +161,7 @@
       <p class="card-title">Flujo del mes</p>
       <div class="row"><div><p class="row-label c-green">Sueldo</p><p class="row-sub">Principios de mes · BNA</p></div><p class="row-amount c-green" id="r-sueldo">+$2.138.000</p></div>
       <div class="row"><div><p class="row-label c-green">Reembolso Agritest</p><p class="row-sub">Día 20</p></div><p class="row-amount c-green" id="r-agritest">+$0</p></div>
+      <div id="ingresos-extras-rows"></div>
       <div class="row"><div><p class="row-label">Starlink</p><p class="row-sub">Día 20 · Mercado Pago</p></div><p class="row-amount c-red" id="r-starlink">-$63.000</p></div>
       <div class="row"><div><p class="row-label">Microsoft</p><p class="row-sub">Día 12 · Mercado Pago</p></div><p class="row-amount c-red" id="r-microsoft">-$4.885</p></div>
       <div class="row"><div><p class="row-label">Claude <span class="cuota-pill">USD 20</span></p><p class="row-sub">Día 15 · Cocos</p></div><p class="row-amount c-red" id="r-claude">-$27.800</p></div>
@@ -631,8 +632,22 @@ async function cargarDatosReales() {
     tarjetaMes = d.tc_total_mes || 0;
     fijosBase = starlink + microsoft + claudeUSD + icloudUSD + tarjetaMes;
     const totalPersonales = d.total_gastos_mes;
-    const saldoReal = sueldo + d.agritest_total - fijosBase - totalPersonales;
+    const saldoReal = sueldo + d.agritest_total + (d.total_ingresos_extras || 0) - fijosBase - totalPersonales;
     balance = saldoReal;
+
+    // Ingresos extras (bonos, etc.)
+    const ingExtrasRows = document.getElementById('ingresos-extras-rows');
+    if (ingExtrasRows) {
+      if (d.ingresos_extras && d.ingresos_extras.length > 0) {
+        ingExtrasRows.innerHTML = d.ingresos_extras.map(ing => {
+          const monto = parseFloat(ing.Monto || 0);
+          const desc = ing.Descripcion || 'Ingreso extra';
+          return `<div class="row"><div><p class="row-label c-green">${desc}</p><p class="row-sub">${ing.Fecha}</p></div><p class="row-amount c-green">+${fmt(monto, m)}</p></div>`;
+        }).join('');
+      } else {
+        ingExtrasRows.innerHTML = '';
+      }
+    }
 
     // Métricas principales
     document.getElementById('m-agritest').textContent = fmt(d.agritest_total, m);
@@ -668,7 +683,7 @@ async function cargarDatosReales() {
     if (persCard) {
       const personales = d.gastos_mes.filter(g => {
         const cat = g["Categoría"] || g.Categoria || '';
-        return cat !== 'Agritest' && cat !== 'Tarjeta Credito';
+        return cat !== 'Agritest' && cat !== 'Tarjeta Credito' && cat !== 'Ingreso';
       });
       if (personales.length > 0) {
         let html = '';

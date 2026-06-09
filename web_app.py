@@ -286,11 +286,15 @@ def datos():
         # Gastos personales del mes seleccionado (excluye Agritest)
         gastos_mes = [g for g in gastos if g.get("Fecha","").endswith(mes_actual) and g.get("Cliente","") != "Agritest"]
 
-        # Total por categoria del mes (personales, excluye Tarjeta Credito — se trackea como cuotas)
+        # Ingresos extras del mes (bonos, etc.) — se muestran aparte, no como gasto
+        ingresos_extras = [g for g in gastos_mes if g.get("Categoria","") == "Ingreso"]
+        total_ingresos_extras = sum(float(str(g.get("Monto",0)).replace(",",".")) for g in ingresos_extras)
+
+        # Total por categoria del mes (excluye Tarjeta Credito e Ingreso)
         categorias = {}
         for g in gastos_mes:
             cat = g.get("Categoria","Otros")
-            if cat == "Tarjeta Credito":
+            if cat in ("Tarjeta Credito", "Ingreso"):
                 continue
             try:
                 monto = float(str(g.get("Monto",0)).replace(",","."))
@@ -347,6 +351,8 @@ def datos():
             "mes": datetime.now().strftime("%B %Y"),
             "sueldo": sueldo,
             "total_gastos_mes": round(total_mes, 2),
+            "ingresos_extras": ingresos_extras,
+            "total_ingresos_extras": round(total_ingresos_extras, 2),
             "agritest_total": round(agritest_total, 2),
             "gastos_agritest": gastos_agritest,
             "gastos_agritest_mes": gastos_agritest_mes,
