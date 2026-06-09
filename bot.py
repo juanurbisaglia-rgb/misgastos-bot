@@ -233,6 +233,8 @@ REGLAS IMPORTANTES:
 7. ESTADO: si cliente es "Agritest", estado = "pendiente". Si es gasto personal, estado = "".
 8. COBRO AGRITEST: si el usuario dice que Agritest le pago, le deposito, cobro de Agritest, o similar → usar accion "cobro_agritest". Esto marca todos los gastos pendientes de Agritest como cobrados y reinicia el ciclo.
 12. SUELDO: si el usuario dice que le aumentaron o cambiaron el sueldo a $X → accion "actualizar_config" con datos {{"clave":"sueldo","valor":MONTO_NUMERICO_SIN_PUNTOS_NI_SIMBOLOS}}.
+13. ETIQUETAS DE PROYECTO: si el usuario dice algo como "poné esto en vacaciones sur", "es para el viaje", "cargalo para X proyecto" → agregar una etiqueta en el campo notas con formato #tag (ej: #vacaciones_sur, #remodelacion). La etiqueta va junto a cualquier otra nota, separada por espacio. La categoria sigue siendo la real (Transporte, Comida, etc.).
+14. RESUMEN POR ETIQUETA: si el usuario pregunta cuanto gasto en un proyecto o viaje → buscar en los ultimos gastos disponibles todos los que tengan ese tag en las notas, sumarlos y responder con el total y el desglose por item. Responder en texto natural, no JSON.
 9. TARJETA DE CREDITO: si el usuario menciona "tarjeta de credito", "tarjeta", "TC", "cuotas" o similar:
    - categoria = "Tarjeta Credito"
    - {f"Tarjeta ya configurada: cierre dia {load_tc_config()['cierre_dia']}, vencimiento dia {load_tc_config()['venc_dia']}. NO preguntes estos datos, ya los tenes guardados. Solo usarlos en notas." if load_tc_config() else "Cierre y vencimiento NO configurados aun: si el usuario no los menciona, hace UNA SOLA pregunta pidiendo cantidad de cuotas, dia de cierre y dia de vencimiento."}
