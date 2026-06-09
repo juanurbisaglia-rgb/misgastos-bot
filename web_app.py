@@ -260,7 +260,21 @@ def datos():
         try:
             config_raw = spreadsheet.worksheet("Config").get_all_values()
             config = {row[0]: row[1] for row in config_raw[1:] if len(row) >= 2}
-            sueldo = int(float(config.get("sueldo", "2138000").replace(",", ".")))
+            sueldo_actual = int(float(config.get("sueldo", "2138000").replace(",", ".")))
+            sueldo_ant = int(float(config.get("sueldo_ant", "0").replace(",", "."))) if config.get("sueldo_ant") else None
+            sueldo_ant_hasta = config.get("sueldo_ant_hasta", "")  # MM/YYYY
+
+            # Usar sueldo anterior si el mes pedido es <= sueldo_ant_hasta
+            if sueldo_ant and sueldo_ant_hasta:
+                def mes_yyyymm(s):
+                    p = s.split("/")
+                    return int(p[1]) * 100 + int(p[0])
+                if mes_yyyymm(mes_actual) <= mes_yyyymm(sueldo_ant_hasta):
+                    sueldo = sueldo_ant
+                else:
+                    sueldo = sueldo_actual
+            else:
+                sueldo = sueldo_actual
         except:
             pass
 

@@ -136,11 +136,29 @@ def actualizar_config(spreadsheet, clave, valor):
     try:
         ws = spreadsheet.worksheet("Config")
         all_values = ws.get_all_values()
-        for i, row in enumerate(all_values[1:], start=2):
-            if row and row[0] == clave:
-                ws.update_cell(i, 2, str(valor))
-                return True
-        ws.append_row([clave, str(valor)])
+        config = {row[0]: (i+2, row[1]) for i, row in enumerate(all_values[1:]) if len(row) >= 2}
+
+        # Para sueldo: guardar historial del valor anterior
+        if clave == "sueldo" and "sueldo" in config:
+            valor_viejo = config["sueldo"][1]
+            ahora = datetime.now(ARG_TZ)
+            prev_month = ahora.month - 1 if ahora.month > 1 else 12
+            prev_year = ahora.year if ahora.month > 1 else ahora.year - 1
+            hasta = f"{str(prev_month).zfill(2)}/{prev_year}"
+
+            def upsert(k, v):
+                if k in config:
+                    ws.update_cell(config[k][0], 2, str(v))
+                else:
+                    ws.append_row([k, str(v)])
+
+            upsert("sueldo_ant", valor_viejo)
+            upsert("sueldo_ant_hasta", hasta)
+
+        if clave in config:
+            ws.update_cell(config[clave][0], 2, str(valor))
+        else:
+            ws.append_row([clave, str(valor)])
         return True
     except Exception as e:
         logger.error(f"Config update error: {e}")
